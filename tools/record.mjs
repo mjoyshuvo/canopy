@@ -42,6 +42,8 @@ const I = {
   down: '<path d="m7 10 5 5 5-5"/>', copy: '<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V5h10"/>',
   mic: '<rect x="9" y="4" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',
   pc: '<rect x="4" y="5" width="16" height="11" rx="1"/><path d="M2 19h20"/>', gear: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20h4"/>',
+  branch: '<circle cx="7" cy="6" r="2"/><circle cx="17" cy="14" r="2"/><path d="M7 8v10M7 12c0 2 3 2 8 2"/>',
   code: '<path d="m9 8-4 4 4 4M15 8l4 4-4 4"/>', chat: '<path d="M5 6h14v9H9l-4 3z"/>',
 }
 const ic = (n, s = 16) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24">${I[n]}</svg>`
@@ -55,7 +57,7 @@ function page(p) {
   const lift = dark ? a['surface-2'] + 'cc' : a['surface-2']
   const code = dark ? '#0a2422d9' : '#f3efd9'
   const line = a['text-muted'] + '40'
-  const nav = [['plus', 'New'], ['search', 'Search'], ['art', 'Artifacts'], ['clock', 'Scheduled'], ['bag', 'Customize'], ['dots', 'More']]
+  const nav = [['plus', 'New'], ['search', 'Search'], ['art', 'Artifacts'], ['clock', 'Scheduled'], ['bell', 'On-call'], ['bag', 'Customize'], ['dots', 'More']]
   const groups = [
     ['Weather app', ['Hourly forecast chart', 'Fix flaky date tests', 'Offline cache']],
     ['Docs site', ['Search index rebuild', 'Dark mode for tables']],
@@ -73,10 +75,14 @@ function page(p) {
   .seg{margin-left:auto;display:flex;gap:2px;background:${line};border-radius:7px;padding:2px}.seg span{padding:2px 5px;border-radius:5px;display:flex}.seg .on{background:${lift}}
   .title{font-size:13px;color:${a['text-primary']};display:flex;gap:4px;align-items:center;padding-left:18px}
   .tools{margin-left:auto;display:flex;gap:12px;align-items:center}.tools .on{background:${line};border-radius:6px;padding:2px}
+  .solid{background:${p.art === 'bands' ? `linear-gradient(${m.scene.sideTop},${m.scene.sideLow})` : a['surface-0']}}
+  ${p.art === 'bands' ? `.side.solid{border-right:3px solid ${m.scene.edge}}.right.solid{border-left:3px solid ${m.scene.edge}}` : ''}
   .side{padding:6px 10px;overflow:hidden;display:flex;flex-direction:column}
   .nav{display:flex;gap:9px;align-items:center;padding:4px 6px;color:${a['text-primary']}}
   .grp{display:flex;justify-content:space-between;align-items:center;margin:12px 6px 4px;font-weight:600;font-size:12px;color:${a['text-secondary']}}
   .ses{padding:4px 6px;border-radius:7px;color:${a['text-primary']};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ses{display:flex;justify-content:space-between}.ses em{font-style:normal;color:${role.pro};display:flex;gap:3px;align-items:center;font-size:12px}
+  .grp span{display:flex;gap:3px;align-items:center}
   .ses.on{background:${lift}}
   .me{margin-top:auto;display:flex;align-items:center;gap:8px;padding:8px 6px;color:${a['text-primary']}}.me b{width:16px;height:16px;border-radius:4px;background:${role.success}}
   .me .ic{margin-left:auto;color:${a['text-muted']}}
@@ -101,13 +107,13 @@ function page(p) {
   </style></head><body>
   <div id="bg">${sceneSvg(p)}</div><div id="veil"></div>
   <div class="app">
-    <div class="bar"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>${ic('side')}${ic('left')}${ic('right')}
+    <div class="bar solid"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>${ic('side')}${ic('left')}${ic('right')}
       <div class="seg"><span>${ic('chat', 14)}</span><span class="on">${ic('code', 14)}</span></div></div>
     <div class="bar"><div class="title">Calm theme for the app ${ic('down', 14)}</div></div>
-    <div class="bar"><div class="tools"><span class="on">${ic('list')}</span>${ic('term')}${ic('diff')}${ic('globe')}${ic('folder')}${ic('dots')}</div></div>
-    <div class="side">
+    <div class="bar solid"><div class="tools"><span class="on">${ic('list')}</span>${ic('term')}${ic('diff')}${ic('globe')}${ic('folder')}${ic('dots')}</div></div>
+    <div class="side solid">
       ${nav.map(([i, t]) => `<div class="nav">${ic(i)}${t}</div>`).join('')}
-      ${groups.map(([g, items]) => `<div class="grp">${g} ${ic('plus', 13)}</div>` + items.map(t => `<div class="ses${t.startsWith('Calm') ? ' on' : ''}">${t}</div>`).join('')).join('')}
+      ${groups.map(([g, items]) => `<div class="grp"><span>${g} ${ic('down', 12)}</span>${ic('plus', 13)}</div>` + items.map((t, k) => `<div class="ses${t.startsWith('Calm') ? ' on' : ''}"><span>${t}</span>${k === 0 ? `<em>${ic('branch', 13)} ${3 + t.length % 9}</em>` : ''}</div>`).join('')).join('')}
       <div class="me"><b></b>You ${ic('gear', 14)}</div>
     </div>
     <div class="main">
@@ -125,7 +131,7 @@ function page(p) {
       <div class="box">${ic('plus')}Type / for commands${ic('mic')}</div>
       <div class="foot"><span>Model</span><span>Auto</span></div>
     </div>
-    <div class="right">
+    <div class="right solid">
       <h5>Environment</h5>
       <div class="row">${ic('pc', 14)}This computer</div>
       <div class="row">${ic('folder', 14)}garden-planner</div>
