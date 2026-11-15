@@ -35,7 +35,7 @@ jobs:
           const total = Object.values(history).reduce((a, b) => a + b, 0)
           fs.writeFileSync(file, JSON.stringify(history, null, 2) + '\n')
           fs.writeFileSync('.github/stats/badge.json', JSON.stringify({
-            schemaVersion: 1, label: 'installs', message: String(total), color: '2f8f6f',
+            schemaVersion: 1, label: 'unique clones', message: String(total), color: '2f8f6f',
           }) + '\n')
           EOF
       - name: Commit
