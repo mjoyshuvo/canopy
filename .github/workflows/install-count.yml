@@ -1,0 +1,47 @@
+# Keeps a running install count for the README badge.
+# A plugin install clones this repo, and GitHub keeps clone stats for only 14 days,
+# so once a day this saves each day's unique clones and writes the total to a badge file.
+# Needs a repo secret TRAFFIC_TOKEN: a fine-grained token for this repo with
+# "Administration: Read-only" (GitHub's traffic API needs it; the default token can't read it).
+name: install count
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update clone history and badge
+        env:
+          GH_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir -p .github/stats
+          gh api "repos/$REPO/traffic/clones" > /tmp/clones.json
+          node - <<'EOF'
+          const fs = require('fs')
+          const file = '.github/stats/clones.json'
+          const history = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {}
+          for (const day of JSON.parse(fs.readFileSync('/tmp/clones.json', 'utf8')).clones) {
+            history[day.timestamp.slice(0, 10)] = day.uniques
+          }
+          const total = Object.values(history).reduce((a, b) => a + b, 0)
+          fs.writeFileSync(file, JSON.stringify(history, null, 2) + '\n')
+          fs.writeFileSync('.github/stats/badge.json', JSON.stringify({
+            schemaVersion: 1, label: 'installs', message: String(total), color: '2f8f6f',
+          }) + '\n')
+          EOF
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/stats
+          git diff --cached --quiet || git commit -m 'Update install count'
+          git push
