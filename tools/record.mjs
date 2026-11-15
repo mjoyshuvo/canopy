@@ -57,6 +57,10 @@ function page(p) {
   const lift = dark ? a['surface-2'] + 'cc' : a['surface-2']
   const code = dark ? '#0a2422d9' : '#f3efd9'
   const line = a['text-muted'] + '40'
+  // Colors sampled from the real app with each theme on, for the parts the mock draws itself.
+  const v = {
+    'apple-green': { side: '#eef4eb', edge: '#dae1d1', code: '#eef0f2', bubble: '#e5efe9', input: '#eef3ed' },
+  }[p.id] ?? { side: a['surface-0'], edge: line, code, bubble: lift, input: lift }
   const nav = [['plus', 'New'], ['search', 'Search'], ['art', 'Artifacts'], ['clock', 'Scheduled'], ['bell', 'On-call'], ['bag', 'Customize'], ['dots', 'More']]
   const groups = [
     ['Weather app', ['Hourly forecast chart', 'Fix flaky date tests', 'Offline cache']],
@@ -75,8 +79,8 @@ function page(p) {
   .seg{margin-left:auto;display:flex;gap:2px;background:${line};border-radius:7px;padding:2px}.seg span{padding:2px 5px;border-radius:5px;display:flex}.seg .on{background:${lift}}
   .title{font-size:13px;color:${a['text-primary']};display:flex;gap:4px;align-items:center;padding-left:18px}
   .tools{margin-left:auto;display:flex;gap:12px;align-items:center}.tools .on{background:${line};border-radius:6px;padding:2px}
-  .solid{background:${p.art === 'bands' ? `linear-gradient(${m.scene.sideTop},${m.scene.sideLow})` : a['surface-0']}}
-  ${p.art === 'bands' ? `.side.solid{border-right:3px solid ${m.scene.edge}}.right.solid{border-left:3px solid ${m.scene.edge}}` : ''}
+  .solid{background:${v.side}}
+  .side.solid{border-right:1px solid ${v.edge}}.right.solid{border-left:1px solid ${v.edge}}
   .side{padding:6px 10px;overflow:hidden;display:flex;flex-direction:column}
   .nav{display:flex;gap:9px;align-items:center;padding:4px 6px;color:${a['text-primary']}}
   .grp{display:flex;justify-content:space-between;align-items:center;margin:12px 6px 4px;font-weight:600;font-size:12px;color:${a['text-secondary']}}
@@ -90,12 +94,12 @@ function page(p) {
   .claude{font:15px/1.55 Georgia,'Times New Roman',serif;color:${a['text-primary']}}
   .claude ul{padding-left:22px;margin-top:6px}.claude li{margin:3px 0}
   code{font:12.5px ui-monospace,Menlo,monospace;background:${line};padding:1px 4px;border-radius:4px}
-  pre{position:relative;background:${code};border:1px solid ${line};border-radius:8px;padding:10px 12px;font:12px/1.6 ui-monospace,Menlo,monospace;color:${a['text-secondary']};width:62%}
+  pre{position:relative;background:${v.code};border:1px solid ${line};border-radius:8px;padding:10px 12px;font:12px/1.6 ui-monospace,Menlo,monospace;color:${a['text-secondary']};width:62%}
   pre .ic{position:absolute;right:9px;top:9px;color:${a['text-muted']}}
   .k{color:${role.accent}}.s{color:${role.success}}.n{color:${role.pro}}.f{color:${role.danger}}.v{color:${role.warning}}
-  .you{align-self:flex-end;border:1px solid ${line};background:${lift};padding:8px 14px;border-radius:12px;font-size:14px}
+  .you{align-self:flex-end;border:1px solid ${line};background:${v.bubble};padding:8px 14px;border-radius:12px;font-size:14px}
   .tool{display:flex;gap:8px;align-items:center;color:${a['text-muted']};font-size:12.5px}.tool b{color:${role.success};font-weight:500}.tool i{color:${role.danger};font-style:normal}
-  .box{margin-top:auto;display:flex;align-items:center;gap:10px;border:1px solid ${line};background:${lift};border-radius:12px;padding:11px 12px;color:${a['text-muted']}}
+  .box{margin-top:auto;display:flex;align-items:center;gap:10px;border:1px solid ${line};background:${v.input};border-radius:12px;padding:11px 12px;color:${a['text-muted']}}
   .box .ic:last-child{margin-left:auto}
   .foot{display:flex;justify-content:flex-end;gap:14px;font-size:11.5px;color:${a['text-muted']}}
   .right{padding:10px 14px;border-left:1px solid ${line};font-size:12.5px}
