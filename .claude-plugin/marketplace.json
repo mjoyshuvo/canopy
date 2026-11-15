@@ -1,0 +1,13 @@
+{
+  "name": "canopy",
+  "owner": { "name": "mjoyshuvo", "url": "https://github.com/mjoyshuvo" },
+  "metadata": { "description": "Canopy themes for the Claude desktop app." },
+  "plugins": [
+    {
+      "name": "canopy",
+      "source": "./plugins/canopy",
+      "description": "Apple green and Firefly Lake looks for the Claude desktop app.",
+      "version": "1.0.0"
+    }
+  ]
+}
