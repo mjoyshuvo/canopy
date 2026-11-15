@@ -5,7 +5,6 @@
 **Calm, nature-inspired themes for the Claude Code desktop app.**
 
 [![unique clones](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmjoyshuvo%2Fcanopy%2Fmain%2F.github%2Fstats%2Fbadge.json)](https://github.com/mjoyshuvo/canopy)
-[![stars](https://img.shields.io/github/stars/mjoyshuvo/canopy?color=2f8f6f)](https://github.com/mjoyshuvo/canopy/stargazers)
 [![version](https://img.shields.io/badge/version-1.0.0-2f8f6f)](plugins/canopy/.claude-plugin/plugin.json)
 [![license](https://img.shields.io/badge/license-MIT-2f8f6f)](LICENSE)
 
