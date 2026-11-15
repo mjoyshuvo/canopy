@@ -7,16 +7,13 @@ import { sceneSvg } from './scene'
 // Canopy for Claude Desktop and mobile.
 //
 //   /canopy <palette>        pick a palette (apple-green | firefly-lake)
-//   /canopy scene | still    the palette's backdrop, or the colors alone
 //   /canopy off              back to the app's own look, for this session
 //
 // The choice is kept across sessions in $.store.
 
-type Backdrop = 'scene' | 'still'
 
 const MOD = 'canopy'
 const SCENE_PREFIX = `${MOD}-`
-const DEFAULT_BACKDROP: Backdrop = 'scene' as Backdrop
 
 const LOOKS = Object.fromEntries(
   PALETTE_IDS.map(id => {
@@ -38,19 +35,16 @@ const SCENES = Object.fromEntries(PALETTE_IDS.map(id => [id, sceneSvg(PALETTES[i
 // No aliases yet.
 const ALIASES: Record<string, PaletteId> = {}
 const isPalette = (value: unknown): value is PaletteId => PALETTE_IDS.includes(value as PaletteId)
-const isBackdrop = (value: unknown): value is Backdrop => value === 'scene' || value === 'still'
 
-async function choice($: EngineInterface): Promise<{ palette: PaletteId; backdrop: Backdrop }> {
+async function choice($: EngineInterface): Promise<{ palette: PaletteId }> {
   const palette = await $.store.get('palette')
-  const backdrop = await $.store.get('backdrop')
   return {
     palette: isPalette(palette) ? palette : DEFAULT_PALETTE,
-    backdrop: isBackdrop(backdrop) ? backdrop : DEFAULT_BACKDROP,
   }
 }
 
 async function apply($: EngineInterface): Promise<string> {
-  const { palette, backdrop } = await choice($)
+  const { palette } = await choice($)
   const look = LOOKS[palette]
   if (look.unpainted !== undefined) $.ui.toast(look.unpainted)
 
@@ -58,19 +52,19 @@ async function apply($: EngineInterface): Promise<string> {
   const args: ThemeSetArgs = {
     colors: look.theme,
     overrideColorScheme: look.palette.mode,
-    ...(backdrop === 'scene' && { backdrop: { scene: SCENE_PREFIX + palette, glass: look.palette.glass } }),
+    backdrop: { scene: SCENE_PREFIX + palette, glass: look.palette.glass },
   }
   const set = await $.theme.set(args)
   lastSet = set
   if (!set.isDrawn) return `${look.palette.label} is set, but nothing draws it here: ${set.reason}`
-  return `${look.palette.label}${backdrop === 'scene' ? (look.palette.art === 'lake' ? ', with the animated lake' : ', with the side bands') : ''}.`
+  return `${look.palette.label}${look.palette.art === 'lake' ? ', with the animated lake' : ', with the side bands'}.`
 }
 
 // What `/canopy debug` reports: the last theme call and every Backdrop request this load saw.
 let lastSet: { isDrawn: boolean; reason?: string } | undefined
 const backdropAsks: string[] = []
 
-const USAGE = `/${MOD} ${PALETTE_IDS.join(' | ')} | scene | still | off`
+const USAGE = `/${MOD} ${PALETTE_IDS.join(' | ')} | off`
 
 export const register: Register = on => {
   // Neither a mod reload nor --resume keeps the theme, so set it at every session start.
@@ -83,10 +77,10 @@ export const register: Register = on => {
   on('command.run', { command: MOD }, async ($, e) => {
     const words = e.args.trim().toLowerCase().split(/\s+/).filter(Boolean)
     if (words.includes('debug')) {
-      const { palette, backdrop } = await choice($)
+      const { palette } = await choice($)
       return {
         text: [
-          `plugin.name=${$.plugin.name} palette=${palette} backdrop=${backdrop}`,
+          `plugin.name=${$.plugin.name} palette=${palette}`,
           `last theme.set: ${JSON.stringify(lastSet)}`,
           `problems: ${LOOKS[palette].unpainted ?? 'none that stop Desktop painting'}`,
           `Backdrop requests seen (${backdropAsks.length}): ${backdropAsks.slice(-5).join(' | ') || 'none'}`,
@@ -98,11 +92,10 @@ export const register: Register = on => {
       return { text: `Canopy is off for this session. /${MOD} brings it back.` }
     }
     const named = words.map(word => ALIASES[word] ?? word)
-    const unknown = named.filter(word => !isPalette(word) && !isBackdrop(word))
+    const unknown = named.filter(word => !isPalette(word))
     if (unknown.length > 0) return { text: `Unknown: ${unknown.join(' ')}. Use ${USAGE}` }
     for (const word of named) {
       if (isPalette(word)) await $.store.set('palette', word)
-      if (isBackdrop(word)) await $.store.set('backdrop', word)
     }
     return { text: await apply($) }
   })
