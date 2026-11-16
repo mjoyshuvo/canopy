@@ -5,7 +5,7 @@
 **Calm, nature-inspired themes for the Claude Code desktop app.**
 
 [![unique clones](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmjoyshuvo%2Fcanopy-claude-desktop-theme%2Fmain%2F.github%2Fstats%2Fbadge.json)](https://github.com/mjoyshuvo/canopy-claude-desktop-theme)
-[![version](https://img.shields.io/badge/version-1.1.0-2f8f6f)](plugins/canopy/.claude-plugin/plugin.json)
+[![release](https://img.shields.io/github/v/release/mjoyshuvo/canopy-claude-desktop-theme?color=2f8f6f)](https://github.com/mjoyshuvo/canopy-claude-desktop-theme/releases)
 [![license](https://img.shields.io/badge/license-MIT-2f8f6f)](LICENSE)
 
 ![Canopy: Apple green, Firefly Lake, then Silver grass](media/canopy-tour.gif)
