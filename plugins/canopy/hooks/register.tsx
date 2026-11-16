@@ -1,3 +1,4 @@
+import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, ThemeSetArgs } from 'claude-code'
 
 import { makeColors } from './make-colors.js'
@@ -6,17 +7,23 @@ import { sceneSvg } from './scene'
 
 // Canopy for Claude Desktop and mobile.
 //
-//   /canopy <palette>        pick a palette (apple-green | firefly-lake | silver-grass | one-dark-pro | dracula | material)
-//   /canopy pick             open the theme picker pane
+//   /canopy                  open the picker: choose a theme, then this session or all sessions
+//   /canopy <palette>        set a palette for all sessions (apple-green | firefly-lake | silver-grass | one-dark-pro | dracula | material)
+//   /canopy <palette> session   set a palette for this session only
 //   /canopy off              back to the app's own look, for this session
 //
-// The choice is kept across sessions in $.store. The picker opens by itself once, in the first
-// session after install, so a new user sees every look without knowing the command.
+// An all-sessions choice is kept in $.store; a this-session choice in $.state, where it wins over
+// the saved one until the session ends. The picker opens by itself once, in the first session
+// after install, so a new user sees every look without knowing the command.
 
 
 const MOD = 'canopy'
 const SCENE_PREFIX = `${MOD}-`
 const PICKER = `${MOD}-picker`
+
+// The theme picked in the picker, waiting for its scope; and a this-session-only theme.
+const pending = atom({ plugin: 'canopy', key: 'pending' } as const, null)
+const sessionPalette = atom({ plugin: 'canopy', key: 'sessionPalette' } as const, null)
 
 type Look = { palette: Palette; theme: ThemeSetArgs['colors']; unpainted?: string }
 
@@ -55,11 +62,25 @@ function sceneOf(id: PaletteId): string {
 const ALIASES: Record<string, PaletteId> = {}
 const isPalette = (value: unknown): value is PaletteId => PALETTE_IDS.includes(value as PaletteId)
 
-async function choice($: EngineInterface): Promise<{ palette: PaletteId }> {
-  const palette = await $.store.get('palette')
-  return {
-    palette: isPalette(palette) ? palette : DEFAULT_PALETTE,
+async function choice($: EngineInterface): Promise<{ palette: PaletteId; isSessionOnly: boolean }> {
+  const forSession = await read($, sessionPalette)
+  if (isPalette(forSession)) return { palette: forSession, isSessionOnly: true }
+  const saved = await $.store.get('palette')
+  return { palette: isPalette(saved) ? saved : DEFAULT_PALETTE, isSessionOnly: false }
+}
+
+type Scope = 'session' | 'all'
+
+/** Sets a palette for this session only, or saves it for every session, then applies it. */
+async function choose($: EngineInterface, id: PaletteId, scope: Scope): Promise<string> {
+  if (scope === 'session') {
+    await update($, sessionPalette, () => id)
+  } else {
+    await $.store.set('palette', id)
+    await update($, sessionPalette, () => null)
   }
+  const said = await apply($)
+  return scope === 'session' ? `${said} For this session only.` : `${said} For all sessions.`
 }
 
 async function apply($: EngineInterface): Promise<string> {
@@ -85,9 +106,12 @@ async function apply($: EngineInterface): Promise<string> {
 let lastSet: { isDrawn: boolean; reason?: string } | undefined
 const backdropAsks: string[] = []
 
-const USAGE = `/${MOD} ${PALETTE_IDS.join(' | ')} | pick | off`
+const USAGE = `/${MOD} [${PALETTE_IDS.join(' | ')} [session]] | off`
 
-const openPicker = ($: EngineInterface) => $.ui.open({ id: PICKER, title: 'Canopy themes' })
+async function openPicker($: EngineInterface) {
+  await update($, pending, () => null)
+  return $.ui.open({ id: PICKER, title: 'Canopy themes' })
+}
 
 /** Four stripes of a palette's own colours: page, card, accent, keyword. */
 function swatch(palette: Palette): string {
@@ -124,7 +148,7 @@ export const register: Register = on => {
         ].join('\n'),
       }
     }
-    if (words.includes('pick') || words.includes('themes')) {
+    if (words.length === 0 || words.includes('pick') || words.includes('themes')) {
       const opened = await openPicker($)
       return { text: opened.isPlaced ? 'Pick a Canopy theme in the pane.' : `The picker could not open here: ${opened.reason}` }
     }
@@ -132,29 +156,54 @@ export const register: Register = on => {
       await $.theme.clear()
       return { text: `Canopy is off for this session. /${MOD} brings it back.` }
     }
-    const named = words.map(word => ALIASES[word] ?? word)
+    const scope: Scope = words.includes('session') || words.includes('once') ? 'session' : 'all'
+    const named = words.filter(word => word !== 'session' && word !== 'once').map(word => ALIASES[word] ?? word)
     const unknown = named.filter(word => !isPalette(word))
     if (unknown.length > 0) return { text: `Unknown: ${unknown.join(' ')}. Use ${USAGE}` }
-    for (const word of named) {
-      if (isPalette(word)) await $.store.set('palette', word)
-    }
-    return { text: await apply($) }
+    const id = named.at(-1)
+    if (!isPalette(id)) return { text: `Name a palette: ${USAGE}` }
+    return { text: await choose($, id, scope) }
   })
 
   on('ui.render', { component: 'Pane', requestId: PICKER }, async ($, e) => {
     const { Box, Text, Button } = $.ui.resolve(e)
     const Svg = e.surface === 'desktop' || e.surface === 'mobile' ? $.ui.resolve(e).Svg : undefined
-    const { palette: current } = await choice($)
-    const pick = async (id: PaletteId) => {
-      await $.store.set('palette', id)
-      $.ui.toast(await apply($))
-      await $.ui.close({ id: PICKER })
+    const { palette: current, isSessionOnly } = await choice($)
+    const picked = await read($, pending)
+
+    // Step two: the theme is picked, so ask where it applies.
+    if (isPalette(picked)) {
+      const palette = PALETTES[picked]
+      const finish = async (scope: Scope) => {
+        $.ui.toast(await choose($, picked, scope))
+        await update($, pending, () => null)
+        await $.ui.close({ id: PICKER })
+      }
+      return (
+        <Box flexDirection="column" gap={1}>
+          <Box flexDirection="row" gap={1} alignItems="center">
+            {Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />}
+            <Text bold>{palette.label}</Text>
+          </Box>
+          <Text dimColor>Use it for this session only, or for all sessions?</Text>
+          <Button key="session" hotkey="1" variant="secondary" onPress={() => finish('session')}>
+            This session only
+          </Button>
+          <Button key="all" hotkey="2" variant="primary" onPress={() => finish('all')}>
+            All sessions
+          </Button>
+          <Button key="back" hotkey="b" onPress={() => update($, pending, () => null)}>Back</Button>
+        </Box>
+      )
     }
+
+    // Step one: pick a theme.
     return (
       <Box flexDirection="column" gap={1}>
-        <Text dimColor>Pick a look. You can change it later with /{MOD} pick.</Text>
+        <Text dimColor>Pick a look. You can change it later with /{MOD}.</Text>
         {PALETTE_IDS.map((id, i) => {
           const palette = PALETTES[id]
+          const note = id === current ? (isSessionOnly ? ', current for this session' : ', current') : ''
           return (
             <Box flexDirection="row" gap={1} alignItems="center">
               {Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />}
@@ -162,9 +211,9 @@ export const register: Register = on => {
                 key={id}
                 hotkey={String(i + 1)}
                 variant={id === current ? 'primary' : 'secondary'}
-                onPress={() => pick(id)}
+                onPress={() => update($, pending, () => id)}
               >
-                {palette.label} <Text dimColor>{palette.mode}{id === current ? ', current' : ''}</Text>
+                {palette.label} <Text dimColor>{palette.mode}{note}</Text>
               </Button>
             </Box>
           )
