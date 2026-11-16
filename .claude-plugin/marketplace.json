@@ -6,8 +6,8 @@
     {
       "name": "canopy",
       "source": "./plugins/canopy",
-      "description": "Apple green, Firefly Lake and Silver grass looks for the Claude desktop app.",
-      "version": "1.2.0"
+      "description": "Apple green, Firefly Lake, Silver grass, One Dark Pro, Dracula and Material looks for the Claude desktop app, with a theme picker.",
+      "version": "1.3.0"
     }
   ]
 }
