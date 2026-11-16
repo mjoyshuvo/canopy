@@ -26,14 +26,16 @@
 
 ## Themes
 
-| Theme | Mode | Motion | Command |
-| --- | --- | --- | --- |
-| [Firefly Lake](#firefly-lake) | Dark | Animated | `/canopy firefly-lake` |
-| [Silver grass](#silver-grass) | Dark | Animated | `/canopy silver-grass` |
-| [Apple green](#apple-green) | Light | Still | `/canopy apple-green` |
-| [One Dark Pro](#vs-code-favourites) | Dark | Still | `/canopy one-dark-pro` |
-| [Dracula](#vs-code-favourites) | Dark | Still | `/canopy dracula` |
-| [Material](#vs-code-favourites) | Dark | Still | `/canopy material` |
+| Theme | Mode | Motion | Text tint | Command |
+| --- | --- | --- | --- | --- |
+| [Firefly Lake](#firefly-lake) | Dark | Animated | Soft teal | `/canopy firefly-lake` |
+| [Silver grass](#silver-grass) | Dark | Animated | Warm gold | `/canopy silver-grass` |
+| [Apple green](#apple-green) | Light | Still | Deep teal-green | `/canopy apple-green` |
+| [One Dark Pro](#vs-code-favourites) | Dark | Still | Sky blue | `/canopy one-dark-pro` |
+| [Dracula](#vs-code-favourites) | Dark | Still | Pale lavender | `/canopy dracula` |
+| [Material](#vs-code-favourites) | Dark | Still | Aqua | `/canopy material` |
+
+Each theme tints its main text toward its accent colour. The task-list check icons share that colour, so they pick up the tint too. Text keeps 7.5:1 contrast or better on every surface.
 
 ### Firefly Lake
 
@@ -94,24 +96,33 @@ In a Claude Code session in the desktop app:
 /plugin install canopy@canopy
 ```
 
-Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and opens a **Canopy themes** pane listing every theme with its colours. Click one (or press its number), then choose **This session only** or **All sessions**. The pane opens by itself only once; `/canopy` brings it back.
+Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and opens the **Canopy themes** picker. It opens by itself only once; `/canopy` brings it back.
 
 ## Usage
 
+### Pick a theme
+
+1. Run `/canopy`. The **Canopy themes** picker opens, listing every theme with its colours.
+2. Click a theme, or press its number.
+3. Choose where it applies:
+   - **This session only**: the theme applies now. Your saved theme stays as it is, and the next session uses it.
+   - **All sessions**: the theme is saved and applied at the start of every session.
+
+Press **Back** to pick a different theme, or **Close** to leave without changing anything.
+
+### Commands
+
 | Command | What it does |
 | --- | --- |
-| `/canopy firefly-lake` | Switch to Firefly Lake for all sessions |
-| `/canopy silver-grass` | Switch to Silver grass |
-| `/canopy apple-green` | Switch to Apple green |
-| `/canopy one-dark-pro` | Switch to One Dark Pro |
-| `/canopy dracula` | Switch to Dracula |
-| `/canopy material` | Switch to Material |
-| `/canopy <theme> session` | Switch for this session only, keeping your saved theme |
+| `/canopy` | Open the theme picker |
+| `/canopy <theme>` | Switch to a theme for all sessions, for example `/canopy dracula` |
+| `/canopy <theme> session` | Switch to a theme for this session only, for example `/canopy dracula session` |
 | `/canopy off` | Use the app's own look for this session |
-| `/canopy` | Open the theme picker: pick a theme, then this session only or all sessions |
 | `/canopy debug` | Print diagnostics (for bug reports) |
 
-- Your choice is saved and applied at the start of every session.
+Theme names: `firefly-lake`, `silver-grass`, `apple-green`, `one-dark-pro`, `dracula`, `material`.
+
+- A session-only theme wins over your saved theme until the session ends. Choosing a theme for all sessions replaces it.
 - `off` lasts for the current session only. The next session uses your saved theme.
 - Each theme sets its own light or dark mode, whatever the app's appearance setting is.
 
@@ -139,7 +150,7 @@ defaults read com.apple.universalaccess reduceTransparency
 
 ### Nothing changes at all
 
-1. Run `/reload-plugins`, then `/canopy firefly-lake`.
+1. Run `/reload-plugins`, then `/canopy firefly-lake session`.
 2. Check that you are in the desktop app's **Code** tab, not the terminal.
 3. Run `/canopy debug` and include the output in an [issue](https://github.com/mjoyshuvo/canopy-claude-desktop-theme/issues).
 
@@ -155,6 +166,8 @@ Update:
 /plugin marketplace update canopy
 ```
 
+Then run `/reload-plugins`, or start a new session. Release notes are on the [releases page](https://github.com/mjoyshuvo/canopy-claude-desktop-theme/releases).
+
 Uninstall:
 
 ```
@@ -168,16 +181,20 @@ Run `/canopy off` first if you want the app's look back in the current session.
 
 Canopy is a Claude Code **mod**: a plugin whose hooks change the app's interface.
 
-- **Colors**: each theme is built with the design system's color generator, so every surface and text color meets contrast rules.
+- **Colors**: each theme is built with the design system's color generator, so every surface and text color meets contrast rules. The main text is tinted toward the theme's accent; the generator also derives borders and the task-list icons from it.
+- **Session or saved**: an all-sessions choice is kept in Claude Code's plugin store. A session-only choice is kept in the session's own state, which ends with the session.
 - **Backdrop**: each animated theme draws an SVG scene behind the conversation, with its own frost across the full width so the sidebars match the middle. Animation is plain CSS, so it runs no scripts and loads nothing from the network.
 - **Privacy**: Canopy sends no data anywhere. Your theme choice is stored locally by Claude Code.
 
 ```
-plugins/canopy/hooks/
-├── palettes.ts     colors and scene colors for each theme
-├── scene.ts        the SVG backdrops
-├── register.tsx    the /canopy command, the theme picker pane and theme switching
-└── make-colors.js  color generator (vendored, do not edit)
+plugins/canopy/
+├── hooks/
+│   ├── palettes.ts     colors and scene colors for each theme
+│   ├── scene.ts        the SVG backdrops
+│   ├── register.tsx    the /canopy command, the theme picker pane and theme switching
+│   └── make-colors.js  color generator (vendored, do not edit)
+├── types/index.d.ts    the session values the picker keeps
+└── tests/              picker and command tests (claude plugin test plugins/canopy)
 ```
 
 ## Adding a theme
