@@ -8,7 +8,7 @@
 [![version](https://img.shields.io/badge/version-1.0.0-2f8f6f)](plugins/canopy/.claude-plugin/plugin.json)
 [![license](https://img.shields.io/badge/license-MIT-2f8f6f)](LICENSE)
 
-![Canopy: Apple green, then Firefly Lake](media/canopy-tour.gif)
+![Canopy: Apple green, Firefly Lake, then Silver grass](media/canopy-tour.gif)
 
 </div>
 
@@ -29,13 +29,20 @@
 | Theme | Mode | Motion | Command |
 | --- | --- | --- | --- |
 | [Firefly Lake](#firefly-lake) | Dark | Animated | `/canopy firefly-lake` |
+| [Silver grass](#silver-grass) | Dark | Animated | `/canopy silver-grass` |
 | [Apple green](#apple-green) | Light | Still | `/canopy apple-green` |
 
 ### Firefly Lake
 
-A moonlit lake at night. Fireflies drift at the edges, tall spruces sway in slow gusts, the water ripples under the moon, and a quiet firework opens over the trees every few seconds. A light frost keeps the reading area calm.
+A moonlit lake at night. Fireflies drift at the edges, tall spruces sway in slow gusts, the water ripples under the moon, and a quiet firework opens over the trees every few seconds. A light frost, edge to edge, keeps the reading area calm.
 
 ![Firefly Lake](media/themes/firefly-lake.gif)
+
+### Silver grass
+
+A dense meadow of low silver grass at dusk. Gusts of breeze roll through it from left to right, mist drifts over a still lake, and muted autumn trees sit on the far shore while a few leaves blow past. Frosted edge to edge.
+
+![Silver grass](media/themes/silver-grass.gif)
 
 ### Apple green
 
@@ -67,6 +74,7 @@ Then start a new session, or run `/reload-plugins` in the current one. Canopy ap
 | Command | What it does |
 | --- | --- |
 | `/canopy firefly-lake` | Switch to Firefly Lake |
+| `/canopy silver-grass` | Switch to Silver grass |
 | `/canopy apple-green` | Switch to Apple green |
 | `/canopy off` | Use the app's own look for this session |
 | `/canopy` | Re-apply your saved theme |
@@ -130,7 +138,7 @@ Run `/canopy off` first if you want the app's look back in the current session.
 Canopy is a Claude Code **mod**: a plugin whose hooks change the app's interface.
 
 - **Colors**: each theme is built with the design system's color generator, so every surface and text color meets contrast rules.
-- **Backdrop**: each theme draws an SVG scene behind the conversation. Animation is plain CSS, so it runs no scripts and loads nothing from the network.
+- **Backdrop**: each animated theme draws an SVG scene behind the conversation, with its own frost across the full width so the sidebars match the middle. Animation is plain CSS, so it runs no scripts and loads nothing from the network.
 - **Privacy**: Canopy sends no data anywhere. Your theme choice is stored locally by Claude Code.
 
 ```

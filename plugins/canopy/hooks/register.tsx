@@ -52,7 +52,9 @@ async function apply($: EngineInterface): Promise<string> {
   const args: ThemeSetArgs = {
     colors: look.theme,
     overrideColorScheme: look.palette.mode,
-    backdrop: { scene: SCENE_PREFIX + palette, glass: look.palette.glass },
+    // The scene draws its own frost across the full width. A clear glass (not false) keeps the
+    // panels see-through: with glass false the app paints a solid band behind the prompt box.
+    backdrop: { scene: SCENE_PREFIX + palette, glass: { blur: 0, tint: look.palette.glass.tint, opacity: 0 } },
   }
   const set = await $.theme.set(args)
   lastSet = set

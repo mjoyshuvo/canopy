@@ -1,7 +1,7 @@
 // The palettes of this theme. Each has a light and a dark half:
 // `anchors` + `roles` feed makeColors (the app's own colors),
 // `scene` paints the backdrop in that mode: a flat still ground (apple-green) or the
-// animated night lake (firefly-lake). Only the half named by `mode` is used.
+// animated night lake (firefly-lake), or the windswept grass field (silver-grass). Only the half named by `mode` is used.
 //
 // Rules (from look.md):
 // - surface-0 is the darkest surface in BOTH modes; surface-1..3 step lighter, a few % apart.
@@ -10,9 +10,9 @@
 // - text-primary >= 7:1 on every surface; text-muted >= 4.5:1 on surface-0 and surface-2.
 // - danger stays red, success green, warning amber — tuned toward the theme's hue.
 
-export type PaletteId = 'apple-green' | 'firefly-lake'
+export type PaletteId = 'apple-green' | 'firefly-lake' | 'silver-grass'
 
-export const PALETTE_IDS: readonly PaletteId[] = ['apple-green', 'firefly-lake']
+export const PALETTE_IDS: readonly PaletteId[] = ['apple-green', 'firefly-lake', 'silver-grass']
 
 export const DEFAULT_PALETTE: PaletteId = 'apple-green'
 
@@ -44,7 +44,7 @@ export type Palette = {
    */
   mode: 'light' | 'dark'
   /** Which drawing the backdrop is: a flat still ground, or the animated lake. */
-  art: 'bands' | 'lake'
+  art: 'bands' | 'lake' | 'field'
   /** Code highlighting theme by name (Desktop's bundled names, e.g. 'everforest-light'); absent, the app's own. */
   codeTheme?: string
   /** The frost the app lays over the backdrop under its panels. */
@@ -124,4 +124,36 @@ export const PALETTES: Record<PaletteId, Palette> = {
       },
     },
   },
+  // Silver grass: a field of tall silver grass at dusk, a misty lake, a band of golden
+  // autumn trees on the far shore. Breeze waves roll through the grass from left to right.
+  'silver-grass': {
+    id: 'silver-grass',
+    label: 'Silver grass',
+    alt: 'A field of tall silver grass at dusk, waving in the breeze, with mist and golden autumn trees across a lake',
+    mode: 'dark',
+    art: 'field',
+    glass: { blur: 4, tint: '#0c1512', opacity: 0.25 },
+    light: { ...UNUSED, anchors: {
+      'surface-0': '#eceee6', 'surface-1': '#f2f3ed', 'surface-2': '#f8f9f5',
+      'text-primary': '#1c241f', 'text-secondary': '#3a453e', 'text-muted': '#56615a',
+    } },
+    dark: {
+      anchors: {
+        'surface-0': '#0e1613',
+        'surface-1': '#121c18',
+        'surface-2': '#16211c',
+        'surface-3': '#17231e',
+        'text-primary': '#eeebdf',
+        'text-secondary': '#c9c6b6',
+        'text-muted': '#a6a393',
+      },
+      roles: { accent: '#e0a83e', danger: '#e2654f', success: '#a3c46a', warning: '#f2c35e', pro: '#b8a6e6' },
+      scene: {
+        skyTop: '#121b1a', skyMid: '#2c3a36', skyLow: '#8a9a8c', sun: '#f4ecd2',
+        mist: '#c9d2c4', hills: '#3c4a42', trees: '#5e5536', treesLit: '#7d6f45', treesDark: '#3e3a28',
+        lake: '#5f6f66', stem: '#17221c', stemLit: '#33463a', plume: '#e6e6d4', leaf: '#e3a33a',
+      },
+    },
+  },
+
 }
