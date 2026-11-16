@@ -39,7 +39,7 @@ A moonlit lake at night. Fireflies drift at the edges, tall spruces sway in slow
 
 ### Apple green
 
-A soft apple-green conversation between lighter sage side bands, with colorful sidebar icons and warm green code blocks. No motion.
+A soft apple-green conversation beside light sidebars, with colorful sidebar icons and warm green code blocks. No motion.
 
 ![Apple green](media/themes/apple-green.gif)
 

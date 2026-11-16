@@ -57,7 +57,7 @@ async function apply($: EngineInterface): Promise<string> {
   const set = await $.theme.set(args)
   lastSet = set
   if (!set.isDrawn) return `${look.palette.label} is set, but nothing draws it here: ${set.reason}`
-  return `${look.palette.label}${look.palette.art === 'lake' ? ', with the animated lake' : ', with the side bands'}.`
+  return `${look.palette.label}${look.palette.art === 'lake' ? ', with the animated lake' : ''}.`
 }
 
 // What `/canopy debug` reports: the last theme call and every Backdrop request this load saw.

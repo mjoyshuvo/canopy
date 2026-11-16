@@ -1,6 +1,6 @@
 // The palettes of this theme. Each has a light and a dark half:
 // `anchors` + `roles` feed makeColors (the app's own colors),
-// `scene` paints the backdrop in that mode: still side bands (apple-green) or the
+// `scene` paints the backdrop in that mode: a flat still ground (apple-green) or the
 // animated night lake (firefly-lake). Only the half named by `mode` is used.
 //
 // Rules (from look.md):
@@ -43,7 +43,7 @@ export type Palette = {
    * the window is pinned to it; the other half is unused. A look for both modes is two palettes.
    */
   mode: 'light' | 'dark'
-  /** Which drawing the backdrop is: still side bands, or the animated lake. */
+  /** Which drawing the backdrop is: a flat still ground, or the animated lake. */
   art: 'bands' | 'lake'
   /** Code highlighting theme by name (Desktop's bundled names, e.g. 'everforest-light'); absent, the app's own. */
   codeTheme?: string
@@ -63,12 +63,12 @@ const UNUSED: Half = {
 }
 
 export const PALETTES: Record<PaletteId, Palette> = {
-  // Apple green: a soft apple-green main window between lighter off-white side bands
+  // Apple green: a soft apple-green main window; the app draws its own lighter sidebars
   // (sidebar and right panel). No motion.
   'apple-green': {
     id: 'apple-green',
     label: 'Apple green',
-    alt: 'A soft apple-green middle between light off-white side bands',
+    alt: 'A soft, flat apple-green ground',
     mode: 'light',
     art: 'bands',
     // Warm green-cream code blocks with soft green/teal tokens, to match the page.
