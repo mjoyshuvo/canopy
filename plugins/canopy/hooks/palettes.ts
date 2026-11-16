@@ -2,6 +2,8 @@
 // `anchors` + `roles` feed makeColors (the app's own colors),
 // `scene` paints the backdrop in that mode: a flat still ground (apple-green) or the
 // animated night lake (firefly-lake), or the windswept grass field (silver-grass). Only the half named by `mode` is used.
+// One Dark Pro, Dracula and Material take their colours from the VS Code themes of those names,
+// on the same still ground as apple-green, each paired with its own code highlighting.
 //
 // Rules (from look.md):
 // - surface-0 is the darkest surface in BOTH modes; surface-1..3 step lighter, a few % apart.
@@ -10,9 +12,16 @@
 // - text-primary >= 7:1 on every surface; text-muted >= 4.5:1 on surface-0 and surface-2.
 // - danger stays red, success green, warning amber — tuned toward the theme's hue.
 
-export type PaletteId = 'apple-green' | 'firefly-lake' | 'silver-grass'
+export type PaletteId = 'apple-green' | 'firefly-lake' | 'silver-grass' | 'one-dark-pro' | 'dracula' | 'material'
 
-export const PALETTE_IDS: readonly PaletteId[] = ['apple-green', 'firefly-lake', 'silver-grass']
+export const PALETTE_IDS: readonly PaletteId[] = [
+  'apple-green',
+  'firefly-lake',
+  'silver-grass',
+  'one-dark-pro',
+  'dracula',
+  'material',
+]
 
 export const DEFAULT_PALETTE: PaletteId = 'apple-green'
 
@@ -61,6 +70,12 @@ const UNUSED: Half = {
   roles: { accent: '#7fc8a9', danger: '#ff6f61', success: '#9ad36a', warning: '#f0c46a', pro: '#b3a6f2' },
   scene: {},
 }
+
+// The light half of a dark-only palette: never drawn, but makeColors still checks it.
+const UNUSED_LIGHT: Half = { ...UNUSED, anchors: {
+  'surface-0': '#eceef0', 'surface-1': '#f2f3f5', 'surface-2': '#f8f9fa',
+  'text-primary': '#1c2024', 'text-secondary': '#3a4048', 'text-muted': '#565e68',
+} }
 
 export const PALETTES: Record<PaletteId, Palette> = {
   // Apple green: a soft apple-green main window; the app draws its own lighter sidebars
@@ -156,5 +171,76 @@ export const PALETTES: Record<PaletteId, Palette> = {
       },
     },
   },
-
+  // One Dark Pro: Atom's One Dark as VS Code ships it. Cool slate greys, blue keywords.
+  'one-dark-pro': {
+    id: 'one-dark-pro',
+    label: 'One Dark Pro',
+    alt: 'A flat slate-grey ground',
+    mode: 'dark',
+    art: 'bands',
+    codeTheme: 'one-dark-pro',
+    glass: { blur: 0, tint: '#282c34', opacity: 0 },
+    light: UNUSED_LIGHT,
+    dark: {
+      anchors: {
+        'surface-0': '#21252b',
+        'surface-1': '#282c34',
+        'surface-2': '#2c313a',
+        'surface-3': '#2c313a',
+        'text-primary': '#e6e9ef',
+        'text-secondary': '#c2c8d3',
+        'text-muted': '#9da5b4',
+      },
+      roles: { accent: '#61afef', danger: '#e06c75', success: '#98c379', warning: '#e5c07b', pro: '#c678dd' },
+      scene: { middle: '#282c34' },
+    },
+  },
+  // Dracula: deep blue-violet night with pink, purple and green accents.
+  dracula: {
+    id: 'dracula',
+    label: 'Dracula',
+    alt: 'A flat deep violet-grey ground',
+    mode: 'dark',
+    art: 'bands',
+    codeTheme: 'dracula',
+    glass: { blur: 0, tint: '#282a36', opacity: 0 },
+    light: UNUSED_LIGHT,
+    dark: {
+      anchors: {
+        'surface-0': '#21222c',
+        'surface-1': '#282a36',
+        'surface-2': '#2c2e3c',
+        'surface-3': '#2c2e3c',
+        'text-primary': '#f8f8f2',
+        'text-secondary': '#d6d7e4',
+        'text-muted': '#aeb2cc',
+      },
+      roles: { accent: '#bd93f9', danger: '#ff5555', success: '#50fa7b', warning: '#ffb86c', pro: '#ff79c6' },
+      scene: { middle: '#282a36' },
+    },
+  },
+  // Material: the Material Theme's blue-grey with its teal accent and pastel code.
+  material: {
+    id: 'material',
+    label: 'Material',
+    alt: 'A flat blue-grey ground',
+    mode: 'dark',
+    art: 'bands',
+    codeTheme: 'material-theme',
+    glass: { blur: 0, tint: '#263238', opacity: 0 },
+    light: UNUSED_LIGHT,
+    dark: {
+      anchors: {
+        'surface-0': '#1f292e',
+        'surface-1': '#263238',
+        'surface-2': '#2a373e',
+        'surface-3': '#2a373e',
+        'text-primary': '#eeffff',
+        'text-secondary': '#c3d2d9',
+        'text-muted': '#a2b6bf',
+      },
+      roles: { accent: '#80cbc4', danger: '#f07178', success: '#c3e88d', warning: '#ffcb6b', pro: '#c792ea' },
+      scene: { middle: '#263238' },
+    },
+  },
 }

@@ -1,11 +1,11 @@
 // Renders each Canopy look into a mock app window and saves PNG frames for the GIFs.
-// Usage: node tools/record.mjs <playwright module path> <out dir>
+// Usage: node tools/record.mjs <playwright module path> <out dir> [theme id ...]  (no ids: every theme)
 // Animations are stepped with the Web Animations API, so frames are exact and smooth.
 import { writeFileSync, readFileSync, mkdirSync, copyFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
 
-const [, , playwrightPath, outDir] = process.argv
+const [, , playwrightPath, outDir, ...only] = process.argv
 const { chromium } = await import(pathToFileURL(resolve(playwrightPath, 'index.mjs')).href)
 // The hooks import each other without extensions (the app's loader allows it; Node does not),
 // so load ES-module copies with the extensions filled in.
@@ -55,7 +55,8 @@ function page(p) {
   const glass = p.glass
   const dark = p.mode === 'dark'
   const lift = dark ? a['surface-2'] + 'cc' : a['surface-2']
-  const code = dark ? '#0a2422d9' : '#f3efd9'
+  // The flat dark themes take their code block from their own page colour, not the lake's teal.
+  const code = dark ? (p.art === 'bands' ? a['surface-0'] : '#0a2422d9') : '#f3efd9'
   // Silver grass keeps the right panel closed so its katana, on the right, is in view.
   const panel = p.id !== 'silver-grass'
   const line = a['text-muted'] + '40'
@@ -154,7 +155,7 @@ function page(p) {
 
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {})
 const tab = await browser.newPage({ viewport: { width: W, height: H } })
-for (const id of Object.keys(PALETTES)) {
+for (const id of only.length > 0 ? only : Object.keys(PALETTES)) {
   const p = PALETTES[id]
   const dir = resolve(outDir, id)
   mkdirSync(dir, { recursive: true })

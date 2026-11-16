@@ -6,17 +6,26 @@ import { sceneSvg } from './scene'
 
 // Canopy for Claude Desktop and mobile.
 //
-//   /canopy <palette>        pick a palette (apple-green | firefly-lake)
+//   /canopy <palette>        pick a palette (apple-green | firefly-lake | silver-grass | one-dark-pro | dracula | material)
+//   /canopy pick             open the theme picker pane
 //   /canopy off              back to the app's own look, for this session
 //
-// The choice is kept across sessions in $.store.
+// The choice is kept across sessions in $.store. The picker opens by itself once, in the first
+// session after install, so a new user sees every look without knowing the command.
 
 
 const MOD = 'canopy'
 const SCENE_PREFIX = `${MOD}-`
+const PICKER = `${MOD}-picker`
 
-const LOOKS = Object.fromEntries(
-  PALETTE_IDS.map(id => {
+type Look = { palette: Palette; theme: ThemeSetArgs['colors']; unpainted?: string }
+
+// Built on first use, not at load: the app shows its own look until the saved theme is set, so
+// a session start pays for one palette's colours rather than all of them.
+const looks = new Map<PaletteId, Look>()
+function lookOf(id: PaletteId): Look {
+  let look = looks.get(id)
+  if (look === undefined) {
     const palette = PALETTES[id]
     const { theme, problems } = makeColors({
       label: palette.label,
@@ -26,11 +35,21 @@ const LOOKS = Object.fromEntries(
       light: { gray: { anchors: palette.light.anchors }, roles: palette.light.roles },
       dark: { gray: { anchors: palette.dark.anchors }, roles: palette.dark.roles },
     })
-    return [id, { palette, theme, unpainted: problems.find(line => line.startsWith("Desktop won't paint")) }]
-  }),
-) as Record<PaletteId, { palette: Palette; theme: ThemeSetArgs['colors']; unpainted?: string }>
+    look = { palette, theme, unpainted: problems.find(line => line.startsWith("Desktop won't paint")) }
+    looks.set(id, look)
+  }
+  return look
+}
 
-const SCENES = Object.fromEntries(PALETTE_IDS.map(id => [id, sceneSvg(PALETTES[id])])) as Record<PaletteId, string>
+const scenes = new Map<PaletteId, string>()
+function sceneOf(id: PaletteId): string {
+  let scene = scenes.get(id)
+  if (scene === undefined) {
+    scene = sceneSvg(PALETTES[id])
+    scenes.set(id, scene)
+  }
+  return scene
+}
 
 // No aliases yet.
 const ALIASES: Record<string, PaletteId> = {}
@@ -45,7 +64,7 @@ async function choice($: EngineInterface): Promise<{ palette: PaletteId }> {
 
 async function apply($: EngineInterface): Promise<string> {
   const { palette } = await choice($)
-  const look = LOOKS[palette]
+  const look = lookOf(palette)
   if (look.unpainted !== undefined) $.ui.toast(look.unpainted)
 
   // Colors, backdrop and the mode go in ONE call: a set replaces the whole theme.
@@ -66,13 +85,29 @@ async function apply($: EngineInterface): Promise<string> {
 let lastSet: { isDrawn: boolean; reason?: string } | undefined
 const backdropAsks: string[] = []
 
-const USAGE = `/${MOD} ${PALETTE_IDS.join(' | ')} | off`
+const USAGE = `/${MOD} ${PALETTE_IDS.join(' | ')} | pick | off`
+
+const openPicker = ($: EngineInterface) => $.ui.open({ id: PICKER, title: 'Canopy themes' })
+
+/** Four stripes of a palette's own colours: page, card, accent, keyword. */
+function swatch(palette: Palette): string {
+  const half = palette[palette.mode]
+  const fills = [half.anchors['surface-0'], half.anchors['surface-2'], half.roles.accent, half.roles.pro]
+  const rects = fills.map((fill, i) => `<rect x="${i * 12}" width="12" height="20" fill="${fill}"/>`).join('')
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 20" width="48" height="20">${rects}</svg>`
+}
 
 export const register: Register = on => {
   // Neither a mod reload nor --resume keeps the theme, so set it at every session start.
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: MOD, description: `Canopy: ${USAGE}` })
+    // The theme first: until it is set the app shows its own look.
     await apply($)
+    await $.command.register({ name: MOD, description: `Canopy: ${USAGE}` })
+    // First session after install: offer the picker once, whether or not it is used.
+    if ((await $.store.get('pickerOffered')) !== true) {
+      await $.store.set('pickerOffered', true)
+      void openPicker($)
+    }
     return next(e)
   })
 
@@ -84,10 +119,14 @@ export const register: Register = on => {
         text: [
           `plugin.name=${$.plugin.name} palette=${palette}`,
           `last theme.set: ${JSON.stringify(lastSet)}`,
-          `problems: ${LOOKS[palette].unpainted ?? 'none that stop Desktop painting'}`,
+          `problems: ${lookOf(palette).unpainted ?? 'none that stop Desktop painting'}`,
           `Backdrop requests seen (${backdropAsks.length}): ${backdropAsks.slice(-5).join(' | ') || 'none'}`,
         ].join('\n'),
       }
+    }
+    if (words.includes('pick') || words.includes('themes')) {
+      const opened = await openPicker($)
+      return { text: opened.isPlaced ? 'Pick a Canopy theme in the pane.' : `The picker could not open here: ${opened.reason}` }
     }
     if (words.includes('off')) {
       await $.theme.clear()
@@ -102,6 +141,39 @@ export const register: Register = on => {
     return { text: await apply($) }
   })
 
+  on('ui.render', { component: 'Pane', requestId: PICKER }, async ($, e) => {
+    const { Box, Text, Button } = $.ui.resolve(e)
+    const Svg = e.surface === 'desktop' || e.surface === 'mobile' ? $.ui.resolve(e).Svg : undefined
+    const { palette: current } = await choice($)
+    const pick = async (id: PaletteId) => {
+      await $.store.set('palette', id)
+      $.ui.toast(await apply($))
+      await $.ui.close({ id: PICKER })
+    }
+    return (
+      <Box flexDirection="column" gap={1}>
+        <Text dimColor>Pick a look. You can change it later with /{MOD} pick.</Text>
+        {PALETTE_IDS.map((id, i) => {
+          const palette = PALETTES[id]
+          return (
+            <Box flexDirection="row" gap={1} alignItems="center">
+              {Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />}
+              <Button
+                key={id}
+                hotkey={String(i + 1)}
+                variant={id === current ? 'primary' : 'secondary'}
+                onPress={() => pick(id)}
+              >
+                {palette.label} <Text dimColor>{palette.mode}{id === current ? ', current' : ''}</Text>
+              </Button>
+            </Box>
+          )
+        })}
+        <Button role="dismiss" onPress={() => $.ui.close({ id: PICKER })}>Close</Button>
+      </Box>
+    )
+  })
+
   on('ui.render', { component: 'Backdrop' }, ($, e, next) => {
     backdropAsks.push(`${e.surface} plugin=${e.props.plugin} scene=${e.props.scene}`)
     // Every mod's backdrop reaches this hook, and another mod may use the same scene name.
@@ -110,6 +182,6 @@ export const register: Register = on => {
     const id = e.props.scene.startsWith(SCENE_PREFIX) ? e.props.scene.slice(SCENE_PREFIX.length) : undefined
     if (!isPalette(id)) return next(e)
     const { Svg } = $.ui.resolve(e)
-    return <Svg source={SCENES[id]} alt={PALETTES[id].alt} isInteractive />
+    return <Svg source={sceneOf(id)} alt={PALETTES[id].alt} isInteractive />
   })
 }

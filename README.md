@@ -2,7 +2,7 @@
 
 # Canopy
 
-**Calm, nature-inspired themes for the Claude Code desktop app.**
+**Calm, nature-inspired themes for the Claude Code desktop app, plus three VS Code favourites.**
 
 [![unique clones](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmjoyshuvo%2Fcanopy-claude-desktop-theme%2Fmain%2F.github%2Fstats%2Fbadge.json)](https://github.com/mjoyshuvo/canopy-claude-desktop-theme)
 [![release](https://img.shields.io/github/v/release/mjoyshuvo/canopy-claude-desktop-theme?color=2f8f6f)](https://github.com/mjoyshuvo/canopy-claude-desktop-theme/releases)
@@ -31,6 +31,9 @@
 | [Firefly Lake](#firefly-lake) | Dark | Animated | `/canopy firefly-lake` |
 | [Silver grass](#silver-grass) | Dark | Animated | `/canopy silver-grass` |
 | [Apple green](#apple-green) | Light | Still | `/canopy apple-green` |
+| [One Dark Pro](#vs-code-favourites) | Dark | Still | `/canopy one-dark-pro` |
+| [Dracula](#vs-code-favourites) | Dark | Still | `/canopy dracula` |
+| [Material](#vs-code-favourites) | Dark | Still | `/canopy material` |
 
 ### Firefly Lake
 
@@ -50,6 +53,30 @@ A soft apple-green conversation beside light sidebars, with colorful sidebar ico
 
 ![Apple green](media/themes/apple-green.gif)
 
+### VS Code favourites
+
+Three of the most-installed VS Code colour themes, on a flat still ground in their own editor colour:
+
+#### One Dark Pro
+
+Slate greys with blue keywords, green strings and purple literals.
+
+![One Dark Pro](media/themes/one-dark-pro.gif)
+
+#### Dracula
+
+Deep violet-grey with purple, pink and green accents.
+
+![Dracula](media/themes/dracula.gif)
+
+#### Material
+
+Material Theme's blue-grey with its teal accent and pastel code.
+
+![Material](media/themes/material.gif)
+
+Each pairs the app's code blocks with the matching highlighting theme where the app offers it. The app's own icons stay as they are: a mod can recolour them through the theme's accent colours, but cannot replace them with another icon set.
+
 > Previews show the theme in a mock-up of the app window. The conversation in them is sample content.
 
 ## Requirements
@@ -67,7 +94,7 @@ In a Claude Code session in the desktop app:
 /plugin install canopy@canopy
 ```
 
-Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time.
+Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and opens a **Canopy themes** pane listing every theme with its colours. Click one (or press its number) to switch; the pane opens by itself only once, and `/canopy pick` brings it back.
 
 ## Usage
 
@@ -76,6 +103,10 @@ Then start a new session, or run `/reload-plugins` in the current one. Canopy ap
 | `/canopy firefly-lake` | Switch to Firefly Lake |
 | `/canopy silver-grass` | Switch to Silver grass |
 | `/canopy apple-green` | Switch to Apple green |
+| `/canopy one-dark-pro` | Switch to One Dark Pro |
+| `/canopy dracula` | Switch to Dracula |
+| `/canopy material` | Switch to Material |
+| `/canopy pick` | Open the theme picker pane |
 | `/canopy off` | Use the app's own look for this session |
 | `/canopy` | Re-apply your saved theme |
 | `/canopy debug` | Print diagnostics (for bug reports) |
@@ -104,7 +135,7 @@ defaults read com.apple.universalaccess reduceTransparency
 ### The scene shows but does not move
 
 - **Reduce motion** stops all animation. On macOS: **System Settings → Accessibility → Display → Reduce motion**.
-- Apple green has no motion by design.
+- Apple green, One Dark Pro, Dracula and Material have no motion by design.
 
 ### Nothing changes at all
 
@@ -145,7 +176,7 @@ Canopy is a Claude Code **mod**: a plugin whose hooks change the app's interface
 plugins/canopy/hooks/
 ├── palettes.ts     colors and scene colors for each theme
 ├── scene.ts        the SVG backdrops
-├── register.tsx    the /canopy command and theme switching
+├── register.tsx    the /canopy command, the theme picker pane and theme switching
 └── make-colors.js  color generator (vendored, do not edit)
 ```
 
@@ -153,7 +184,7 @@ plugins/canopy/hooks/
 
 1. Add an entry to `PALETTES` in [`palettes.ts`](plugins/canopy/hooks/palettes.ts), with its `id`, `mode`, colors and scene colors.
 2. Add its scene to [`scene.ts`](plugins/canopy/hooks/scene.ts) and pick it in `sceneSvg`.
-3. Record the preview: `node tools/record.mjs <playwright-path> <frames-dir>`, then save it as `media/themes/<id>.gif`.
+3. Record the preview: `node tools/record.mjs <playwright-path> <frames-dir> <id>` (leave out the id to record every theme; set `CHROME` to a browser binary if Playwright's own is missing), then save it as `media/themes/<id>.gif`.
 4. Add a row to the [Themes](#themes) table and a section with its GIF.
 
 Keep scenes under 131,072 characters, animate with CSS only, and keep the art away from the middle of the window, where the text sits.
