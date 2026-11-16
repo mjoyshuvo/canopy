@@ -7,7 +7,7 @@
       "name": "canopy",
       "source": "./plugins/canopy",
       "description": "Apple green, Firefly Lake and Silver grass looks for the Claude desktop app.",
-      "version": "1.1.0"
+      "version": "1.2.0"
     }
   ]
 }

@@ -56,6 +56,8 @@ function page(p) {
   const dark = p.mode === 'dark'
   const lift = dark ? a['surface-2'] + 'cc' : a['surface-2']
   const code = dark ? '#0a2422d9' : '#f3efd9'
+  // Silver grass keeps the right panel closed so its katana, on the right, is in view.
+  const panel = p.id !== 'silver-grass'
   const line = a['text-muted'] + '40'
   // Colors sampled from the real app with each theme on, for the parts the mock draws itself.
   const v = {
@@ -73,7 +75,7 @@ function page(p) {
   #bg{position:absolute;inset:0}#bg svg{width:100%;height:100%;display:block}
   #veil{position:absolute;inset:0;backdrop-filter:blur(${glass.blur}px);background:${glass.tint}${Math.round(glass.opacity * 255).toString(16).padStart(2, '0')}}
   .ic{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
-  .app{position:absolute;inset:0;display:grid;grid-template-columns:21.25% 1fr 16.25%;grid-template-rows:34px 1fr}
+  .app{position:absolute;inset:0;display:grid;grid-template-columns:21.25% 1fr ${panel ? '16.25%' : ''};grid-template-rows:34px 1fr}
   .bar{display:flex;align-items:center;gap:10px;padding:0 12px;color:${a['text-secondary']}}
   .lights{display:flex;gap:7px;margin-right:6px}.lights i{width:11px;height:11px;border-radius:50%;display:block}
   .seg{margin-left:auto;display:flex;gap:2px;background:${line};border-radius:7px;padding:2px}.seg span{padding:2px 5px;border-radius:5px;display:flex}.seg .on{background:${lift}}
@@ -113,8 +115,8 @@ function page(p) {
   <div class="app">
     <div class="bar solid"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>${ic('side')}${ic('left')}${ic('right')}
       <div class="seg"><span>${ic('chat', 14)}</span><span class="on">${ic('code', 14)}</span></div></div>
-    <div class="bar"><div class="title">Calm theme for the app ${ic('down', 14)}</div></div>
-    <div class="bar solid"><div class="tools"><span class="on">${ic('list')}</span>${ic('term')}${ic('diff')}${ic('globe')}${ic('folder')}${ic('dots')}</div></div>
+    <div class="bar"><div class="title">Calm theme for the app ${ic('down', 14)}</div>${panel ? '' : `<div class="tools"><span class="on">${ic('list')}</span>${ic('term')}${ic('diff')}${ic('globe')}${ic('folder')}${ic('dots')}</div>`}</div>
+    ${panel ? `<div class="bar solid"><div class="tools"><span class="on">${ic('list')}</span>${ic('term')}${ic('diff')}${ic('globe')}${ic('folder')}${ic('dots')}</div></div>` : ''}
     <div class="side solid">
       ${nav.map(([i, t]) => `<div class="nav">${ic(i)}${t}</div>`).join('')}
       ${groups.map(([g, items]) => `<div class="grp"><span>${g} ${ic('down', 12)}</span>${ic('plus', 13)}</div>` + items.map((t, k) => `<div class="ses${t.startsWith('Calm') ? ' on' : ''}"><span>${t}</span>${k === 0 ? `<em>${ic('branch', 13)} ${3 + t.length % 9}</em>` : ''}</div>`).join('')).join('')}
@@ -135,7 +137,7 @@ function page(p) {
       <div class="box">${ic('plus')}Type / for commands${ic('mic')}</div>
       <div class="foot"><span>Model</span><span>Auto</span></div>
     </div>
-    <div class="right solid">
+    ${panel ? `    <div class="right solid">
       <h5>Environment</h5>
       <div class="row">${ic('pc', 14)}This computer</div>
       <div class="row">${ic('folder', 14)}garden-planner</div>
@@ -146,6 +148,7 @@ function page(p) {
       <div class="row"><span class="badge">L</span>Linear</div>
       <div class="row"><span class="badge">S</span>Slack</div>
     </div>
+` : ''}
   </div></body></html>`
 }
 
