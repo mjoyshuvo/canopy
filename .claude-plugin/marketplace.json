@@ -7,7 +7,7 @@
       "name": "canopy",
       "source": "./plugins/canopy",
       "description": "Apple green and Firefly Lake looks for the Claude desktop app.",
-      "version": "1.0.0"
+      "version": "1.1.0"
     }
   ]
 }
