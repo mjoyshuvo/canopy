@@ -3,8 +3,8 @@
   "version": "1.1.0",
   "description": "Calm, nature-inspired looks for the Claude desktop app: Apple green, Firefly Lake (a moonlit lake with fireflies) and Silver grass (a breezy meadow at dusk).",
   "author": { "name": "mjoyshuvo", "url": "https://github.com/mjoyshuvo" },
-  "homepage": "https://github.com/mjoyshuvo/canopy",
-  "repository": "https://github.com/mjoyshuvo/canopy",
+  "homepage": "https://github.com/mjoyshuvo/canopy-claude-desktop-theme",
+  "repository": "https://github.com/mjoyshuvo/canopy-claude-desktop-theme",
   "license": "MIT",
   "keywords": ["theme", "mod", "desktop", "backdrop"]
 }
