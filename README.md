@@ -4,7 +4,7 @@
 
 **Calm, nature-inspired themes for the Claude Code desktop app.**
 
-[![unique clones](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmjoyshuvo%2Fcanopy%2Fmain%2F.github%2Fstats%2Fbadge.json)](https://github.com/mjoyshuvo/canopy)
+[![unique clones](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmjoyshuvo%2Fcanopy-claude-desktop-theme%2Fmain%2F.github%2Fstats%2Fbadge.json)](https://github.com/mjoyshuvo/canopy-claude-desktop-theme)
 [![version](https://img.shields.io/badge/version-1.1.0-2f8f6f)](plugins/canopy/.claude-plugin/plugin.json)
 [![license](https://img.shields.io/badge/license-MIT-2f8f6f)](LICENSE)
 
@@ -63,7 +63,7 @@ A soft apple-green conversation beside light sidebars, with colorful sidebar ico
 In a Claude Code session in the desktop app:
 
 ```
-/plugin marketplace add mjoyshuvo/canopy
+/plugin marketplace add mjoyshuvo/canopy-claude-desktop-theme
 /plugin install canopy@canopy
 ```
 
@@ -110,7 +110,7 @@ defaults read com.apple.universalaccess reduceTransparency
 
 1. Run `/reload-plugins`, then `/canopy firefly-lake`.
 2. Check that you are in the desktop app's **Code** tab, not the terminal.
-3. Run `/canopy debug` and include the output in an [issue](https://github.com/mjoyshuvo/canopy/issues).
+3. Run `/canopy debug` and include the output in an [issue](https://github.com/mjoyshuvo/canopy-claude-desktop-theme/issues).
 
 ### Some panes keep the app's colors
 
