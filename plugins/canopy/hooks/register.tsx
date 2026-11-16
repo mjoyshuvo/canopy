@@ -18,8 +18,14 @@ const MOD = 'canopy'
 const SCENE_PREFIX = `${MOD}-`
 const PICKER = `${MOD}-picker`
 
-const LOOKS = Object.fromEntries(
-  PALETTE_IDS.map(id => {
+type Look = { palette: Palette; theme: ThemeSetArgs['colors']; unpainted?: string }
+
+// Built on first use, not at load: the app shows its own look until the saved theme is set, so
+// a session start pays for one palette's colours rather than all of them.
+const looks = new Map<PaletteId, Look>()
+function lookOf(id: PaletteId): Look {
+  let look = looks.get(id)
+  if (look === undefined) {
     const palette = PALETTES[id]
     const { theme, problems } = makeColors({
       label: palette.label,
@@ -29,11 +35,21 @@ const LOOKS = Object.fromEntries(
       light: { gray: { anchors: palette.light.anchors }, roles: palette.light.roles },
       dark: { gray: { anchors: palette.dark.anchors }, roles: palette.dark.roles },
     })
-    return [id, { palette, theme, unpainted: problems.find(line => line.startsWith("Desktop won't paint")) }]
-  }),
-) as Record<PaletteId, { palette: Palette; theme: ThemeSetArgs['colors']; unpainted?: string }>
+    look = { palette, theme, unpainted: problems.find(line => line.startsWith("Desktop won't paint")) }
+    looks.set(id, look)
+  }
+  return look
+}
 
-const SCENES = Object.fromEntries(PALETTE_IDS.map(id => [id, sceneSvg(PALETTES[id])])) as Record<PaletteId, string>
+const scenes = new Map<PaletteId, string>()
+function sceneOf(id: PaletteId): string {
+  let scene = scenes.get(id)
+  if (scene === undefined) {
+    scene = sceneSvg(PALETTES[id])
+    scenes.set(id, scene)
+  }
+  return scene
+}
 
 // No aliases yet.
 const ALIASES: Record<string, PaletteId> = {}
@@ -48,7 +64,7 @@ async function choice($: EngineInterface): Promise<{ palette: PaletteId }> {
 
 async function apply($: EngineInterface): Promise<string> {
   const { palette } = await choice($)
-  const look = LOOKS[palette]
+  const look = lookOf(palette)
   if (look.unpainted !== undefined) $.ui.toast(look.unpainted)
 
   // Colors, backdrop and the mode go in ONE call: a set replaces the whole theme.
@@ -84,8 +100,9 @@ function swatch(palette: Palette): string {
 export const register: Register = on => {
   // Neither a mod reload nor --resume keeps the theme, so set it at every session start.
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: MOD, description: `Canopy: ${USAGE}` })
+    // The theme first: until it is set the app shows its own look.
     await apply($)
+    await $.command.register({ name: MOD, description: `Canopy: ${USAGE}` })
     // First session after install: offer the picker once, whether or not it is used.
     if ((await $.store.get('pickerOffered')) !== true) {
       await $.store.set('pickerOffered', true)
@@ -102,7 +119,7 @@ export const register: Register = on => {
         text: [
           `plugin.name=${$.plugin.name} palette=${palette}`,
           `last theme.set: ${JSON.stringify(lastSet)}`,
-          `problems: ${LOOKS[palette].unpainted ?? 'none that stop Desktop painting'}`,
+          `problems: ${lookOf(palette).unpainted ?? 'none that stop Desktop painting'}`,
           `Backdrop requests seen (${backdropAsks.length}): ${backdropAsks.slice(-5).join(' | ') || 'none'}`,
         ].join('\n'),
       }
@@ -165,6 +182,6 @@ export const register: Register = on => {
     const id = e.props.scene.startsWith(SCENE_PREFIX) ? e.props.scene.slice(SCENE_PREFIX.length) : undefined
     if (!isPalette(id)) return next(e)
     const { Svg } = $.ui.resolve(e)
-    return <Svg source={SCENES[id]} alt={PALETTES[id].alt} isInteractive />
+    return <Svg source={sceneOf(id)} alt={PALETTES[id].alt} isInteractive />
   })
 }
