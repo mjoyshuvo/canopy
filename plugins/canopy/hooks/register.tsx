@@ -120,10 +120,41 @@ async function closePicker($: EngineInterface) {
   await update($, pending, () => null)
 }
 
-// Moving between steps swaps the buttons, so put the focus ring on the new step's main choice
-// while the band holds the keys. Where it doesn't (or nothing can move a ring), the pick stands.
-const focusOn = ($: EngineInterface, requestId: string, key: string) =>
-  $.ui.focus({ requestId, key }).catch(() => undefined)
+// The picker's two steps, shared by its buttons and by what is typed in the message box.
+async function pickTheme($: EngineInterface, id: PaletteId) {
+  await update($, pending, () => id)
+}
+
+async function backToThemes($: EngineInterface) {
+  await update($, pending, () => null)
+}
+
+const SCOPES: readonly Scope[] = ['session', 'all']
+
+/** Presses row `index` of the step on screen: a theme in step one, a scope in step two. */
+async function pressRow($: EngineInterface, index: number): Promise<string | undefined> {
+  const picked = await read($, pending)
+  if (isPalette(picked)) {
+    const scope = SCOPES[index]
+    return scope === undefined ? undefined : finishPick($, picked, scope)
+  }
+  const id = PALETTE_IDS[index]
+  if (id !== undefined) await pickTheme($, id)
+  return undefined
+}
+
+async function finishPick($: EngineInterface, id: PaletteId, scope: Scope): Promise<string> {
+  const said = await choose($, id, scope)
+  await closePicker($)
+  return said
+}
+
+/** A theme named by its number in the picker, its id or its label. */
+function themeOf(word: string): PaletteId | undefined {
+  const n = Number(word)
+  if (Number.isInteger(n) && n >= 1 && n <= PALETTE_IDS.length) return PALETTE_IDS[n - 1]
+  return PALETTE_IDS.find(id => id === word || PALETTES[id].label.toLowerCase() === word)
+}
 
 /** Four stripes of a palette's own colours: page, card, accent, keyword. */
 function swatch(palette: Palette): string {
@@ -177,84 +208,142 @@ export const register: Register = on => {
     return { text: await choose($, id, scope) }
   })
 
-  // The band is the main column's: arrows, Enter and the number keys work once it holds the keys
-  // (a click on it, or ctrl+x then tab); a mod can't hand them over from the prompt.
+  // The keyboard reaches the picker through the message box, which keeps the focus: Desktop gives
+  // the band none of its own, and the arrows there recall history. While the picker is up and the
+  // box is empty, a row's number presses that row, b goes back and x closes; each such key is
+  // consumed, and anything else edits the box as usual.
+  on('prompt.edit', async ($, e, next) => {
+    if (e.text !== '' || !(await read($, isPicking))) return next(e)
+    const picked = await read($, pending)
+    const rows = isPalette(picked) ? SCOPES.length : PALETTE_IDS.length
+    const typed = e.inputText.toLowerCase()
+    const consume = { text: '', cursor: 0 }
+    if (/^[1-9]$/.test(typed) && Number(typed) <= rows) {
+      const said = await pressRow($, Number(typed) - 1)
+      if (said !== undefined) $.ui.toast(said)
+      return consume
+    }
+    if (typed === 'b' && isPalette(picked)) {
+      await backToThemes($)
+      return consume
+    }
+    if (typed === 'x') {
+      await closePicker($)
+      return consume
+    }
+    return next(e)
+  })
+
+  // A whole word typed and sent (a theme's name, `back`, `close`) answers the picker too.
+  on('prompt.submit', async ($, e, next) => {
+    if (e.command !== undefined || e.isMeta || !(await read($, isPicking))) return next(e)
+    const word = e.text.trim().toLowerCase()
+    const picked = await read($, pending)
+    if (word === 'x' || word === 'close') {
+      await closePicker($)
+      return { drop: 'Canopy picker closed.' }
+    }
+    if (isPalette(picked)) {
+      if (word === 'b' || word === 'back') {
+        await backToThemes($)
+        return { drop: 'Pick a theme: type its number and press Enter.' }
+      }
+      const scope: Scope | undefined = word === '1' || word === 'session' ? 'session' : word === '2' || word === 'all' ? 'all' : undefined
+      if (scope !== undefined) return { drop: await finishPick($, picked, scope) }
+      return next(e)
+    }
+    const id = themeOf(word)
+    if (id === undefined) return next(e)
+    await pickTheme($, id)
+    return { drop: `${PALETTES[id].label}: type 1 for this session only, 2 for all sessions.` }
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey || !(await read($, isPicking))) return next(e)
     const { Box, Text, Button } = $.ui.resolve(e)
+    // Desktop draws a Button's children in its own colours, so the swatch sits beside the button.
     const Svg = e.surface === 'desktop' || e.surface === 'mobile' ? $.ui.resolve(e).Svg : undefined
     const { palette: current, isSessionOnly } = await choice($)
     const picked = await read($, pending)
     const chip = (palette: Palette) =>
       Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />
 
+    // One framed row per option: swatch, the option as a button (its number on it), what it means,
+    // and a mark on the one in use. The frame lights on hover.
+    const row = (
+      index: number,
+      key: string,
+      palette: Palette,
+      label: string,
+      detail: string,
+      onPress: () => unknown,
+      mark?: string,
+    ) => (
+      <Box
+        key={`row-${key}`}
+        flexDirection="row"
+        alignItems="center"
+        gap={2}
+        paddingX={1}
+        borderStyle="round"
+        borderColor={mark !== undefined ? 'success' : undefined}
+        borderDimColor={mark === undefined}
+        hover={{ borderColor: 'suggestion', borderDimColor: false }}
+      >
+        {chip(palette)}
+        <Button key={key} hotkey={String(index + 1)} onPress={onPress}>{label}</Button>
+        <Box flexGrow={1}>
+          <Text dimColor>{detail}</Text>
+        </Box>
+        {mark !== undefined && <Text color="success" bold>✓ {mark}</Text>}
+      </Box>
+    )
+
+    const header = (title: string, hint: string) => (
+      <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+        <Text>
+          <Text bold>{title}</Text>
+          <Text dimColor>  {hint}</Text>
+        </Text>
+        <Button key="close" role="dismiss" onPress={() => closePicker($)}>Close</Button>
+      </Box>
+    )
+
     // Step two: the theme is picked, so ask where it applies.
     if (isPalette(picked)) {
       const palette = PALETTES[picked]
-      const finish = async (scope: Scope) => {
-        $.ui.toast(await choose($, picked, scope))
-        await closePicker($)
-      }
+      const finish = async (scope: Scope) => $.ui.toast(await finishPick($, picked, scope))
       return (
         <Box flexDirection="column">
-          <Box flexDirection="row" gap={1} alignItems="center">
-            {chip(palette)}
-            <Text bold>{palette.label}</Text>
-            <Text dimColor>for this session only, or for all sessions?</Text>
-          </Box>
-          <Box flexDirection="row" gap={1} flexWrap="wrap">
-            <Button key="session" hotkey="1" variant="secondary" onPress={() => finish('session')}>
-              This session only
-            </Button>
-            <Button key="all" hotkey="2" variant="primary" autoFocus onPress={() => finish('all')}>
-              All sessions
-            </Button>
-            <Button
-              key="back"
-              hotkey="b"
-              onPress={async () => {
-                await update($, pending, () => null)
-                await focusOn($, e.requestId, picked)
-              }}
-            >
-              Back
-            </Button>
-            <Button key="close" role="dismiss" onPress={() => closePicker($)}>Close</Button>
+          {header(`Apply ${palette.label}`, 'Click one, or type 1 or 2 in the empty message box.')}
+          {row(0, 'session', palette, 'This session only', 'Applies now; your saved theme comes back next session', () => finish('session'))}
+          {row(1, 'all', palette, 'All sessions', 'Saved and applied at the start of every session', () => finish('all'))}
+          <Box flexDirection="row">
+            <Button key="back" hotkey="b" onPress={() => backToThemes($)}>Back</Button>
           </Box>
         </Box>
       )
     }
 
-    // Step one: pick a theme.
+    // Step one: pick a theme. Two columns of three, so the header and all six fit the room above
+    // the prompt; a single stack scrolled the header out of view.
+    const themeRow = (id: PaletteId, i: number) => {
+      const palette = PALETTES[id]
+      const detail = [palette.mode === 'dark' ? 'Dark' : 'Light', palette.art === 'bands' ? 'still' : 'animated'].join(', ')
+      const mark = id === current ? (isSessionOnly ? 'Current, this session' : 'Current') : undefined
+      return row(i, id, palette, palette.label, detail, () => pickTheme($, id), mark)
+    }
+    const half = Math.ceil(PALETTE_IDS.length / 2)
     return (
       <Box flexDirection="column">
-        <Text>
-          <Text bold>Canopy themes</Text>
-          <Text dimColor>  Click a theme. Once you click in here, the arrow keys and Enter work too.</Text>
-        </Text>
-        <Box flexDirection="row" gap={1} flexWrap="wrap">
-          {PALETTE_IDS.map((id, i) => {
-            const palette = PALETTES[id]
-            const note = id === current ? (isSessionOnly ? ' (this session)' : ' (current)') : ''
-            return (
-              <Box flexDirection="row" gap={1} alignItems="center">
-                {chip(palette)}
-                <Button
-                  key={id}
-                  hotkey={String(i + 1)}
-                  variant={id === current ? 'primary' : 'secondary'}
-                  {...(id === current && { autoFocus: true as const })}
-                  onPress={async () => {
-                    await update($, pending, () => id)
-                    await focusOn($, e.requestId, 'all')
-                  }}
-                >
-                  {palette.label}{note}
-                </Button>
-              </Box>
-            )
-          })}
-          <Button key="close" role="dismiss" onPress={() => closePicker($)}>Close</Button>
+        {header('Canopy themes', 'Click a theme, or type its number in the empty message box.')}
+        <Box flexDirection="row" columnGap={1}>
+          <Box flexDirection="column" width="50%">
+            {PALETTE_IDS.slice(0, half).map((id, i) => themeRow(id, i))}
+          </Box>
+          <Box flexDirection="column" width="50%">
+            {PALETTE_IDS.slice(half).map((id, i) => themeRow(id, half + i))}
+          </Box>
         </Box>
       </Box>
     )
