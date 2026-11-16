@@ -152,6 +152,7 @@ export const PALETTES: Record<PaletteId, Palette> = {
         skyTop: '#121b1a', skyMid: '#2c3a36', skyLow: '#8a9a8c', sun: '#f4ecd2',
         mist: '#c9d2c4', hills: '#3c4a42', trees: '#5e5536', treesLit: '#7d6f45', treesDark: '#3e3a28',
         lake: '#5f6f66', stem: '#17221c', stemLit: '#33463a', plume: '#e6e6d4', leaf: '#e3a33a',
+        steel: '#aeb8b4', brass: '#8f7134', grip: '#1a1716', gripWrap: '#4a423b', cord: '#8e3a2c', mask: '#2c2724',
       },
     },
   },

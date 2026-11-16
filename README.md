@@ -40,7 +40,7 @@ A moonlit lake at night. Fireflies drift at the edges, tall spruces sway in slow
 
 ### Silver grass
 
-A dense meadow of low silver grass at dusk. Gusts of breeze roll through it from left to right, mist drifts over a still lake, and muted autumn trees sit on the far shore while a few leaves blow past. Frosted edge to edge.
+A dense meadow of low silver grass at dusk. Gusts of breeze roll through it from left to right, mist drifts over a still lake, and muted autumn trees sit on the far shore while a few leaves blow past. On the right, a katana leans in the grass with a samurai half-mask hanging from its cord. Frosted edge to edge.
 
 ![Silver grass](media/themes/silver-grass.gif)
 

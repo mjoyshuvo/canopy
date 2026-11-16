@@ -295,7 +295,7 @@ function blade(x: number, y: number, h: number, lean: number, w: number, plume: 
   let d = ''
   for (let k = 0; k < strands; k++) {
     const t = strands === 1 ? 0 : k / (strands - 1) - 0.5
-    d += `M${f(tx)} ${f(ty)}q${f(dir * plume * 0.25)} ${f(plume * 0.1)} ${f(dir * plume * (0.35 + t * 0.35))} ${f(plume * (0.75 - Math.abs(t) * 0.35))}`
+    d += `M${f(tx)} ${f(ty)}q${f(dir * plume * 0.25)} ${f(plume * 0.1)} ${f(dir * plume * (0.35 + t * 0.85))} ${f(plume * (0.75 - Math.abs(t) * 0.35))}`
   }
   return out + `<path class="plume" d="${d}"/>`
 }
@@ -310,7 +310,7 @@ function grass(seed: number, count: number, baseY: number, depth: number, minH: 
     const y = baseY + r() * depth
     const h = minH + r() * (maxH - minH)
     const lean = (r() - 0.25) * h * 0.35
-    const plume = r() < 0.85 ? h * (0.22 + r() * 0.12) : 0
+    const plume = r() < 0.85 ? h * (0.32 + r() * 0.14) : 0
     const k = Math.min(11, Math.floor(((x + 40) / (W + 80)) * 12))
     out += `<g class="${layer} k${k}">${blade(x, y, h, lean, (layer === 'gf' ? 1.8 + r() * 2 : 1.3 + r() * 1.1), plume, layer === 'gf' ? 3 : 2)}</g>`
   }
@@ -347,6 +347,28 @@ function leaves(seed: number): string {
   return out
 }
 
+/** A katana planted in the grass on the right, a lacquered half-mask hung from its handle,
+ *  and the cord stirring in the breeze. Its own drawing, not any game's. */
+function katana(): string {
+  // Blade from the ground (y 905) up to the guard, leaning a little right.
+  const blade = `<path class="kb" d="M1392 905Q1386 770 1402 640L1409 640Q1394 770 1399 905Z"/>` +
+    `<path class="kg" d="M1402 640L1409 640L1404 700Z"/>`
+  const guard = `<ellipse class="kt" cx="1406" cy="636" rx="17" ry="6"/>`
+  let wrap = ''
+  for (let y = 548; y < 630; y += 11) wrap += `M1404 ${y}l6 5l-6 5l-6-5Z`
+  const grip = `<path class="kh" d="M1400 630L1404 545L1415 545L1412 630Z"/><path class="kw" d="${wrap}"/>` +
+    `<circle class="kt" cx="1410" cy="543" r="5"/>`
+  const cord = `<path class="kc" d="M1404 640q-10 20-14 38"/>`
+  const mask =
+    `<g transform="translate(1388 690) scale(.8)"><g class="hang">` +
+    `<path class="km" d="M-30 0q0-14 30-14q30 0 30 14l-4 30q-6 22-26 26q-20-4-26-26Z"/>` +
+    `<path class="kr" d="M-30 2q30-8 60 0l-1 6q-29-7-58 0Z"/>` +
+    `<path class="kn" d="M-4 4l4 16l4-16Z"/>` +
+    `<path class="kn" d="M-14 28q14 8 28 0l-2 8q-12 6-24 0Z"/>` +
+    `<path class="kr" d="M-18 22q-6 6-10 2M18 22q6 6 10 2"/></g></g>`
+  return `<g transform="translate(1400 905) rotate(14) scale(1.1) translate(-1400 -905)">${blade}${guard}${grip}${cord}${mask}</g>`
+}
+
 const FIELD_STYLE =
   `.s0{stop-color:var(--sky-top)}.s1{stop-color:var(--sky-mid)}.s2{stop-color:var(--sky-low)}` +
   `.g0{stop-color:var(--sun);stop-opacity:.55}.g1{stop-color:var(--sun);stop-opacity:0}` +
@@ -354,13 +376,17 @@ const FIELD_STYLE =
   `.d0{stop-color:var(--stem-lit)}.d1{stop-color:var(--stem)}` +
   `.hills{fill:var(--hills)}.lake{fill:var(--lake)}.tr{fill:var(--trees)}.tr-d{fill:var(--trees-dark)}.tr-l{fill:var(--trees-lit);opacity:.35}` +
   `.stem{fill:none;stroke:var(--stem-lit);stroke-linecap:round}.gb .stem{stroke:var(--stem)}` +
-  `.plume{fill:none;stroke:var(--plume);stroke-width:2.2;stroke-linecap:round}.gb .plume{opacity:.45}.gf .plume{opacity:.75;stroke-width:3}` +
+  `.plume{fill:none;stroke:var(--plume);stroke-width:2.2;stroke-linecap:round}.gb .plume{opacity:.45}.gf .plume{opacity:.75;stroke-width:3.4}` +
   `.gf,.gb{transform-box:fill-box;transform-origin:50% 100%;animation:breeze 8s ease-in-out infinite}.gb{animation-name:breeze-s}` +
   Array.from({ length: 12 }, (_, k) => `.k${k}{animation-delay:${(-8 + k * 0.28).toFixed(2)}s}`).join('') +
   `.sunglow{animation:breathe 16s ease-in-out infinite alternate;transform-origin:330px 380px}` +
   `.mist{animation:mist 40s ease-in-out infinite alternate}.mist2{animation-duration:55s;animation-direction:alternate-reverse}` +
   `.leaf{fill:var(--leaf);opacity:0;animation:carry 16s linear infinite}` +
   [0, -3, -6, -9, -12, -14].map((d, i) => `.l${i}{animation-delay:${d}s${i % 2 ? ';animation-duration:20s' : ''}}`).join('') +
+  `.kb{fill:var(--steel)}.kg{fill:var(--sun);opacity:.7;animation:glint 6s ease-in-out infinite}.kt{fill:var(--brass)}` +
+  `.kh{fill:var(--grip)}.kw{fill:var(--grip-wrap)}.kc{fill:none;stroke:var(--cord);stroke-width:2.5;stroke-linecap:round;transform-box:fill-box;transform-origin:50% 0;animation:cord 8s ease-in-out infinite}` +
+  `.km{fill:var(--mask)}.kr{fill:var(--cord)}.kn{fill:var(--grip)}.hang{animation:hang 8s ease-in-out infinite;transform-origin:0 -10px}` +
+  `@keyframes glint{0%,70%,100%{opacity:0}80%{opacity:.8}}@keyframes cord{0%,100%{transform:rotate(0)}40%{transform:rotate(9deg)}60%{transform:rotate(4deg)}}@keyframes hang{0%,100%{transform:rotate(0)}40%{transform:rotate(4deg)}60%{transform:rotate(1.5deg)}}` +
   `@keyframes breeze{0%,100%{transform:rotate(0)}22%{transform:rotate(7deg)}34%{transform:rotate(3deg)}48%{transform:rotate(8.5deg)}70%{transform:rotate(1.5deg)}}` +
   `@keyframes breeze-s{0%,100%{transform:rotate(0)}22%{transform:rotate(4deg)}34%{transform:rotate(1.5deg)}48%{transform:rotate(5deg)}70%{transform:rotate(1deg)}}` +
   `@keyframes breathe{from{opacity:.75;transform:scale(1)}to{opacity:1;transform:scale(1.06)}}` +
@@ -386,6 +412,7 @@ export function fieldSvg(palette: Palette): string {
     `<rect y="600" width="${W}" height="${H - 600}" fill="url(#ground)"/>` +
     grass(31, 400, 610, 230, 14, 40, 'gb') +
     `<rect class="mist mist2" x="-100" y="590" width="${W + 200}" height="120" fill="url(#mist)"/>` +
+    katana() +
     grass(37, 320, 720, 300, 45, 110, 'gf') +
     leaves(43)
   const fr = frosted(palette, body)
