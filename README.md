@@ -26,16 +26,14 @@
 
 ## Themes
 
-| Theme | Mode | Motion | Text tint | Command |
-| --- | --- | --- | --- | --- |
-| [Firefly Lake](#firefly-lake) | Dark | Animated | Soft teal | `/canopy firefly-lake` |
-| [Silver grass](#silver-grass) | Dark | Animated | Warm gold | `/canopy silver-grass` |
-| [Apple green](#apple-green) | Light | Still | Deep teal-green | `/canopy apple-green` |
-| [One Dark Pro](#vs-code-favourites) | Dark | Still | Sky blue | `/canopy one-dark-pro` |
-| [Dracula](#vs-code-favourites) | Dark | Still | Pale lavender | `/canopy dracula` |
-| [Material](#vs-code-favourites) | Dark | Still | Aqua | `/canopy material` |
-
-Each theme tints its main text toward its accent colour. The task-list check icons share that colour, so they pick up the tint too. Text keeps 7.5:1 contrast or better on every surface.
+| Theme | Mode | Motion | Command |
+| --- | --- | --- | --- |
+| [Firefly Lake](#firefly-lake) | Dark | Animated | `/canopy firefly-lake` |
+| [Silver grass](#silver-grass) | Dark | Animated | `/canopy silver-grass` |
+| [Apple green](#apple-green) | Light | Still | `/canopy apple-green` |
+| [One Dark Pro](#vs-code-favourites) | Dark | Still | `/canopy one-dark-pro` |
+| [Dracula](#vs-code-favourites) | Dark | Still | `/canopy dracula` |
+| [Material](#vs-code-favourites) | Dark | Still | `/canopy material` |
 
 ### Firefly Lake
 
@@ -102,15 +100,21 @@ Then start a new session, or run `/reload-plugins` in the current one. Canopy ap
 
 ### Pick a theme
 
-1. Run `/canopy`. The **Canopy themes** picker appears above the message box, listing every theme with its colours.
-2. Click a theme. To use the keyboard, click inside the picker first; then the arrow keys and Enter, or a theme's number, pick it.
+1. Run `/canopy`. The **Canopy themes** picker appears above the message box: every theme in a framed, numbered row with its colours, in two columns. Your current theme is marked **✓ Current**.
+2. Click a theme's name, or use the keyboard (below).
 3. Choose where it applies:
    - **This session only**: the theme applies now. Your saved theme stays as it is, and the next session uses it.
    - **All sessions**: the theme is saved and applied at the start of every session.
 
-Press **Back** to pick a different theme, or **Close** to leave without changing anything.
+**Keyboard.** The keys go through the message box, which keeps the focus. While the picker is up and the message box is empty:
 
-The picker sits in the main column rather than the side panel. A mod can't move the keyboard there from the message box, which is why the keys work only after a click.
+| Key | What it does |
+| --- | --- |
+| `1`–`6` | Choose that row at once |
+| `b` | Back to the theme list |
+| `x` | Close the picker |
+
+Once you start typing a message, keys work as usual. The arrow keys stay with the message box, where they recall earlier messages. **Back** and **Close** are also buttons in the picker.
 
 ### Commands
 
@@ -183,7 +187,7 @@ Run `/canopy off` first if you want the app's look back in the current session.
 
 Canopy is a Claude Code **mod**: a plugin whose hooks change the app's interface.
 
-- **Colors**: each theme is built with the design system's color generator, so every surface and text color meets contrast rules. The main text is tinted toward the theme's accent; the generator also derives borders and the task-list icons from it.
+- **Colors**: each theme is built with the design system's color generator, so every surface and text color meets contrast rules.
 - **Session or saved**: an all-sessions choice is kept in Claude Code's plugin store. A session-only choice is kept in the session's own state, which ends with the session.
 - **Backdrop**: each animated theme draws an SVG scene behind the conversation, with its own frost across the full width so the sidebars match the middle. Animation is plain CSS, so it runs no scripts and loads nothing from the network.
 - **Privacy**: Canopy sends no data anywhere. Your theme choice is stored locally by Claude Code.
