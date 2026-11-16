@@ -8,7 +8,7 @@
 [![release](https://img.shields.io/github/v/release/mjoyshuvo/canopy-claude-desktop-theme?color=2f8f6f)](https://github.com/mjoyshuvo/canopy-claude-desktop-theme/releases)
 [![license](https://img.shields.io/badge/license-MIT-2f8f6f)](LICENSE)
 
-![Canopy: Apple green, Firefly Lake, then Silver grass](media/canopy-tour.gif)
+![Canopy: Firefly Lake, Silver grass, Apple green, One Dark Pro, Dracula and Material](media/promo/canopy-themes.gif)
 
 </div>
 
