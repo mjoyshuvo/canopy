@@ -109,7 +109,7 @@ function page(p) {
   .meter{display:flex;align-items:center;gap:6px;color:${a['text-muted']}}.meter span{width:26px;height:6px;border-radius:3px;background:${line};position:relative}.meter span:after{content:'';position:absolute;left:0;top:0;bottom:0;width:30%;border-radius:3px;background:${role.accent}}
   .badge{width:16px;text-align:center;font-size:10px;color:${a['text-muted']}}
   </style></head><body>
-  <div id="bg">${sceneSvg(p)}</div><div id="veil"></div>
+  <div id="bg">${sceneSvg(p)}</div>
   <div class="app">
     <div class="bar solid"><div class="lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>${ic('side')}${ic('left')}${ic('right')}
       <div class="seg"><span>${ic('chat', 14)}</span><span class="on">${ic('code', 14)}</span></div></div>

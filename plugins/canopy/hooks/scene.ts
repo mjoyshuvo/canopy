@@ -245,6 +245,16 @@ const LAKE_STYLE =
   `@keyframes drift{from{transform:translate(-14px,10px)}to{transform:translate(16px,-18px)}}` +
   REDUCED
 
+/** The frost is drawn inside the scene, over its whole width, so the sidebars get the same
+ *  blur and tint as the conversation (the app's own glass only frosts under some panels). */
+function frosted(palette: Palette, body: string): { defs: string; body: string } {
+  const g = palette.glass
+  return {
+    defs: `<filter id="frost" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="${g.blur}"/></filter>`,
+    body: `<g filter="url(#frost)">${body}</g><rect width="${W}" height="${H}" fill="${g.tint}" opacity="${g.opacity}"/>`,
+  }
+}
+
 /** Animated: the night lake. */
 export function lakeSvg(palette: Palette): string {
   const c = palette[palette.mode].scene
@@ -267,12 +277,125 @@ export function lakeSvg(palette: Palette): string {
     tallTrees(9) +
     fireflies(23) +
     fireworks(41)
+  const fr = frosted(palette, body)
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">` +
-    `<style>svg{${vars(c)}}${LAKE_STYLE}</style><defs>${defs}</defs>${body}</svg>`
+    `<style>svg{${vars(c)}}${LAKE_STYLE}</style><defs>${defs}${fr.defs}</defs>${fr.body}</svg>`
+  )
+}
+
+/** One grass blade in scene coordinates, base at (x, y): a bending stem and a small
+ *  feathery plume of strands drooping the way the stem leans. */
+function blade(x: number, y: number, h: number, lean: number, w: number, plume: number, strands: number): string {
+  const tx = x + lean
+  const ty = y - h
+  let out = `<path class="stem" stroke-width="${w.toFixed(1)}" d="M${f(x)} ${f(y)}Q${f(x + lean * 0.2)} ${f(y - h * 0.55)} ${f(tx)} ${f(ty)}"/>`
+  if (plume <= 0) return out
+  const dir = lean >= 0 ? 1 : -1
+  let d = ''
+  for (let k = 0; k < strands; k++) {
+    const t = strands === 1 ? 0 : k / (strands - 1) - 0.5
+    d += `M${f(tx)} ${f(ty)}q${f(dir * plume * 0.25)} ${f(plume * 0.1)} ${f(dir * plume * (0.35 + t * 0.35))} ${f(plume * (0.75 - Math.abs(t) * 0.35))}`
+  }
+  return out + `<path class="plume" d="${d}"/>`
+}
+
+/** A layer of grass across the width; each blade sways from its base (its box's bottom
+ *  centre), and the delay grows with x so each gust rolls through from left to right. */
+function grass(seed: number, count: number, baseY: number, depth: number, minH: number, maxH: number, layer: string): string {
+  const r = random(seed)
+  let out = ''
+  for (let i = 0; i < count; i++) {
+    const x = -40 + r() * (W + 80)
+    const y = baseY + r() * depth
+    const h = minH + r() * (maxH - minH)
+    const lean = (r() - 0.25) * h * 0.35
+    const plume = r() < 0.85 ? h * (0.22 + r() * 0.12) : 0
+    const k = Math.min(11, Math.floor(((x + 40) / (W + 80)) * 12))
+    out += `<g class="${layer} k${k}">${blade(x, y, h, lean, (layer === 'gf' ? 1.8 + r() * 2 : 1.3 + r() * 1.1), plume, layer === 'gf' ? 3 : 2)}</g>`
+  }
+  return out
+}
+
+/** Golden autumn trees along the far shore, as clumps of round crowns. */
+function autumnTrees(seed: number): string {
+  const r = random(seed)
+  let dark = ''
+  let mid = ''
+  let lit = ''
+  for (let x = 620; x < W + 60; x += 14 + r() * 22) {
+    const top = 560 - (40 + r() * 120) * (0.6 + ((x - 620) / (W - 620)) * 0.7)
+    for (let k = 0; k < 3; k++) {
+      const cx = x + (r() - 0.5) * 30
+      const cy = top + k * 26 + r() * 14
+      const rad = 18 + r() * 22
+      dark += blob(cx + 4, cy + 8, rad)
+      mid += blob(cx, cy, rad * 0.9)
+      if (r() < 0.6) lit += blob(cx - rad * 0.3, cy - rad * 0.3, rad * 0.45)
+    }
+  }
+  return `<path class="tr-d" d="${dark}"/><path class="tr" d="${mid}"/><path class="tr-l" d="${lit}"/>`
+}
+
+/** Golden leaves carried across the field by the breeze. */
+function leaves(seed: number): string {
+  const r = random(seed)
+  let out = ''
+  for (let i = 0; i < 12; i++) {
+    out += `<g transform="translate(${f(-60)} ${f(300 + r() * 380)})"><ellipse class="leaf l${i % 6}" rx="4.5" ry="2.4"/></g>`
+  }
+  return out
+}
+
+const FIELD_STYLE =
+  `.s0{stop-color:var(--sky-top)}.s1{stop-color:var(--sky-mid)}.s2{stop-color:var(--sky-low)}` +
+  `.g0{stop-color:var(--sun);stop-opacity:.55}.g1{stop-color:var(--sun);stop-opacity:0}` +
+  `.m0{stop-color:var(--mist);stop-opacity:0}.m1{stop-color:var(--mist);stop-opacity:.5}.m2{stop-color:var(--mist);stop-opacity:0}` +
+  `.d0{stop-color:var(--stem-lit)}.d1{stop-color:var(--stem)}` +
+  `.hills{fill:var(--hills)}.lake{fill:var(--lake)}.tr{fill:var(--trees)}.tr-d{fill:var(--trees-dark)}.tr-l{fill:var(--trees-lit);opacity:.35}` +
+  `.stem{fill:none;stroke:var(--stem-lit);stroke-linecap:round}.gb .stem{stroke:var(--stem)}` +
+  `.plume{fill:none;stroke:var(--plume);stroke-width:2.2;stroke-linecap:round}.gb .plume{opacity:.45}.gf .plume{opacity:.75;stroke-width:3}` +
+  `.gf,.gb{transform-box:fill-box;transform-origin:50% 100%;animation:breeze 8s ease-in-out infinite}.gb{animation-name:breeze-s}` +
+  Array.from({ length: 12 }, (_, k) => `.k${k}{animation-delay:${(-8 + k * 0.28).toFixed(2)}s}`).join('') +
+  `.sunglow{animation:breathe 16s ease-in-out infinite alternate;transform-origin:330px 380px}` +
+  `.mist{animation:mist 40s ease-in-out infinite alternate}.mist2{animation-duration:55s;animation-direction:alternate-reverse}` +
+  `.leaf{fill:var(--leaf);opacity:0;animation:carry 16s linear infinite}` +
+  [0, -3, -6, -9, -12, -14].map((d, i) => `.l${i}{animation-delay:${d}s${i % 2 ? ';animation-duration:20s' : ''}}`).join('') +
+  `@keyframes breeze{0%,100%{transform:rotate(0)}22%{transform:rotate(7deg)}34%{transform:rotate(3deg)}48%{transform:rotate(8.5deg)}70%{transform:rotate(1.5deg)}}` +
+  `@keyframes breeze-s{0%,100%{transform:rotate(0)}22%{transform:rotate(4deg)}34%{transform:rotate(1.5deg)}48%{transform:rotate(5deg)}70%{transform:rotate(1deg)}}` +
+  `@keyframes breathe{from{opacity:.75;transform:scale(1)}to{opacity:1;transform:scale(1.06)}}` +
+  `@keyframes mist{from{transform:translateX(-60px)}to{transform:translateX(60px)}}` +
+  `@keyframes carry{0%{transform:translate(0,0) rotate(0);opacity:0}6%{opacity:.9}50%{transform:translate(900px,80px) rotate(360deg)}92%{opacity:.8}100%{transform:translate(1760px,40px) rotate(720deg);opacity:0}}` +
+  REDUCED
+
+/** Animated: the silver grass field at dusk. */
+export function fieldSvg(palette: Palette): string {
+  const c = palette[palette.mode].scene
+  const defs =
+    `<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s0"/><stop offset=".55" class="s1"/><stop offset="1" class="s2"/></linearGradient>` +
+    `<radialGradient id="sun"><stop offset="0" class="g0"/><stop offset="1" class="g1"/></radialGradient>` +
+    `<linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="m0"/><stop offset=".5" class="m1"/><stop offset="1" class="m2"/></linearGradient>` +
+    `<linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="d0"/><stop offset="1" class="d1"/></linearGradient>`
+  const body =
+    `<rect width="${W}" height="${H}" fill="url(#sky)"/>` +
+    `<g class="sunglow"><circle cx="330" cy="380" r="420" fill="url(#sun)"/></g>` +
+    `<path class="hills" d="${ridge(520, 70, 13)}"/>` +
+    `<rect class="lake" y="555" width="${W}" height="60"/>` +
+    autumnTrees(19) +
+    `<rect class="mist" x="-100" y="470" width="${W + 200}" height="150" fill="url(#mist)"/>` +
+    `<rect y="600" width="${W}" height="${H - 600}" fill="url(#ground)"/>` +
+    grass(31, 400, 610, 230, 14, 40, 'gb') +
+    `<rect class="mist mist2" x="-100" y="590" width="${W + 200}" height="120" fill="url(#mist)"/>` +
+    grass(37, 320, 720, 300, 45, 110, 'gf') +
+    leaves(43)
+  const fr = frosted(palette, body)
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">` +
+    `<style>svg{${vars(c)}}${FIELD_STYLE}</style><defs>${defs}${fr.defs}</defs>${fr.body}</svg>`
   )
 }
 
 export function sceneSvg(palette: Palette): string {
-  return palette.art === 'bands' ? bandsSvg(palette) : lakeSvg(palette)
+  if (palette.art === 'bands') return bandsSvg(palette)
+  return palette.art === 'field' ? fieldSvg(palette) : lakeSvg(palette)
 }
