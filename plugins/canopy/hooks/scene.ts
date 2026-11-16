@@ -58,22 +58,11 @@ function ridge(baseY: number, amp: number, seed: number): string {
 
 const REDUCED = `@media (prefers-reduced-motion:reduce){*{animation:none!important}}`
 
-/** Still: soft sage bands, as percentages of the window, around an off-white middle. */
+/** Still: one flat apple-green ground. The app's own panels sit over it, so no lines or bands
+ *  are drawn: fixed-position lines show up mid-conversation when a side panel is resized. */
 export function bandsSvg(palette: Palette): string {
   const c = palette[palette.mode].scene
-  const left = 21.25
-  const right = 16.25
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">` +
-    `<defs><linearGradient id="side" x1="0" y1="0" x2="0" y2="1">` +
-    `<stop offset="0" stop-color="${c.sideTop}"/><stop offset="1" stop-color="${c.sideLow}"/></linearGradient></defs>` +
-    `<rect width="100%" height="100%" fill="${c.middle}"/>` +
-    `<rect width="${left}%" height="100%" fill="url(#side)"/>` +
-    `<rect x="${100 - right}%" width="${right}%" height="100%" fill="url(#side)"/>` +
-    `<rect x="${left}%" width="3" height="100%" fill="${c.edge}"/>` +
-    `<rect x="${100 - right}%" width="3" height="100%" fill="${c.edge}"/>` +
-    `</svg>`
-  )
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><rect width="100%" height="100%" fill="${c.middle}"/></svg>`
 }
 
 function stars(seed: number): string {
