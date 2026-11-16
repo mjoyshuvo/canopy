@@ -57,9 +57,23 @@ A soft apple-green conversation beside light sidebars, with colorful sidebar ico
 
 Three of the most-installed VS Code colour themes, on a flat still ground in their own editor colour:
 
-- **One Dark Pro**: slate greys with blue keywords, green strings and purple literals.
-- **Dracula**: deep violet-grey with purple, pink and green accents.
-- **Material**: Material Theme's blue-grey with its teal accent and pastel code.
+#### One Dark Pro
+
+Slate greys with blue keywords, green strings and purple literals.
+
+![One Dark Pro](media/themes/one-dark-pro.gif)
+
+#### Dracula
+
+Deep violet-grey with purple, pink and green accents.
+
+![Dracula](media/themes/dracula.gif)
+
+#### Material
+
+Material Theme's blue-grey with its teal accent and pastel code.
+
+![Material](media/themes/material.gif)
 
 Each pairs the app's code blocks with the matching highlighting theme where the app offers it. The app's own icons stay as they are: a mod can recolour them through the theme's accent colours, but cannot replace them with another icon set.
 
@@ -170,7 +184,7 @@ plugins/canopy/hooks/
 
 1. Add an entry to `PALETTES` in [`palettes.ts`](plugins/canopy/hooks/palettes.ts), with its `id`, `mode`, colors and scene colors.
 2. Add its scene to [`scene.ts`](plugins/canopy/hooks/scene.ts) and pick it in `sceneSvg`.
-3. Record the preview: `node tools/record.mjs <playwright-path> <frames-dir>`, then save it as `media/themes/<id>.gif`.
+3. Record the preview: `node tools/record.mjs <playwright-path> <frames-dir> <id>` (leave out the id to record every theme; set `CHROME` to a browser binary if Playwright's own is missing), then save it as `media/themes/<id>.gif`.
 4. Add a row to the [Themes](#themes) table and a section with its GIF.
 
 Keep scenes under 131,072 characters, animate with CSS only, and keep the art away from the middle of the window, where the text sits.
