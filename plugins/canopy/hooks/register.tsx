@@ -13,15 +13,17 @@ import { sceneSvg } from './scene'
 //   /canopy off              back to the app's own look, for this session
 //
 // An all-sessions choice is kept in $.store; a this-session choice in $.state, where it wins over
-// the saved one until the session ends. The picker opens by itself once, in the first session
-// after install, so a new user sees every look without knowing the command.
+// the saved one until the session ends. The picker is a band above the prompt, in the main
+// column: Desktop docks every pane in the side panel. It opens by itself once, in the first
+// session after install, so a new user sees every look without knowing the command.
 
 
 const MOD = 'canopy'
 const SCENE_PREFIX = `${MOD}-`
-const PICKER = `${MOD}-picker`
 
-// The theme picked in the picker, waiting for its scope; and a this-session-only theme.
+// Whether the picker band is up; the theme picked in it, waiting for its scope; and a
+// this-session-only theme.
+const isPicking = atom({ plugin: 'canopy', key: 'isPicking' } as const, false)
 const pending = atom({ plugin: 'canopy', key: 'pending' } as const, null)
 const sessionPalette = atom({ plugin: 'canopy', key: 'sessionPalette' } as const, null)
 
@@ -110,8 +112,18 @@ const USAGE = `/${MOD} [${PALETTE_IDS.join(' | ')} [session]] | off`
 
 async function openPicker($: EngineInterface) {
   await update($, pending, () => null)
-  return $.ui.open({ id: PICKER, title: 'Canopy themes' })
+  await update($, isPicking, () => true)
 }
+
+async function closePicker($: EngineInterface) {
+  await update($, isPicking, () => false)
+  await update($, pending, () => null)
+}
+
+// Moving between steps swaps the buttons, so put the focus ring on the new step's main choice
+// while the band holds the keys. Where it doesn't (or nothing can move a ring), the pick stands.
+const focusOn = ($: EngineInterface, requestId: string, key: string) =>
+  $.ui.focus({ requestId, key }).catch(() => undefined)
 
 /** Four stripes of a palette's own colours: page, card, accent, keyword. */
 function swatch(palette: Palette): string {
@@ -130,7 +142,7 @@ export const register: Register = on => {
     // First session after install: offer the picker once, whether or not it is used.
     if ((await $.store.get('pickerOffered')) !== true) {
       await $.store.set('pickerOffered', true)
-      void openPicker($)
+      await openPicker($)
     }
     return next(e)
   })
@@ -149,8 +161,8 @@ export const register: Register = on => {
       }
     }
     if (words.length === 0 || words.includes('pick') || words.includes('themes')) {
-      const opened = await openPicker($)
-      return { text: opened.isPlaced ? 'Pick a Canopy theme in the pane.' : `The picker could not open here: ${opened.reason}` }
+      await openPicker($)
+      return { text: 'Pick a Canopy theme above the prompt.' }
     }
     if (words.includes('off')) {
       await $.theme.clear()
@@ -165,60 +177,85 @@ export const register: Register = on => {
     return { text: await choose($, id, scope) }
   })
 
-  on('ui.render', { component: 'Pane', requestId: PICKER }, async ($, e) => {
+  // The band is the main column's: arrows, Enter and the number keys work once it holds the keys
+  // (a click on it, or ctrl+x then tab); a mod can't hand them over from the prompt.
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (e.props.hasSurvey || !(await read($, isPicking))) return next(e)
     const { Box, Text, Button } = $.ui.resolve(e)
     const Svg = e.surface === 'desktop' || e.surface === 'mobile' ? $.ui.resolve(e).Svg : undefined
     const { palette: current, isSessionOnly } = await choice($)
     const picked = await read($, pending)
+    const chip = (palette: Palette) =>
+      Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />
 
     // Step two: the theme is picked, so ask where it applies.
     if (isPalette(picked)) {
       const palette = PALETTES[picked]
       const finish = async (scope: Scope) => {
         $.ui.toast(await choose($, picked, scope))
-        await update($, pending, () => null)
-        await $.ui.close({ id: PICKER })
+        await closePicker($)
       }
       return (
-        <Box flexDirection="column" gap={1}>
+        <Box flexDirection="column">
           <Box flexDirection="row" gap={1} alignItems="center">
-            {Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />}
+            {chip(palette)}
             <Text bold>{palette.label}</Text>
+            <Text dimColor>for this session only, or for all sessions?</Text>
           </Box>
-          <Text dimColor>Use it for this session only, or for all sessions?</Text>
-          <Button key="session" hotkey="1" variant="secondary" onPress={() => finish('session')}>
-            This session only
-          </Button>
-          <Button key="all" hotkey="2" variant="primary" onPress={() => finish('all')}>
-            All sessions
-          </Button>
-          <Button key="back" hotkey="b" onPress={() => update($, pending, () => null)}>Back</Button>
+          <Box flexDirection="row" gap={1} flexWrap="wrap">
+            <Button key="session" hotkey="1" variant="secondary" onPress={() => finish('session')}>
+              This session only
+            </Button>
+            <Button key="all" hotkey="2" variant="primary" autoFocus onPress={() => finish('all')}>
+              All sessions
+            </Button>
+            <Button
+              key="back"
+              hotkey="b"
+              onPress={async () => {
+                await update($, pending, () => null)
+                await focusOn($, e.requestId, picked)
+              }}
+            >
+              Back
+            </Button>
+            <Button key="close" role="dismiss" onPress={() => closePicker($)}>Close</Button>
+          </Box>
         </Box>
       )
     }
 
     // Step one: pick a theme.
     return (
-      <Box flexDirection="column" gap={1}>
-        <Text dimColor>Pick a look. You can change it later with /{MOD}.</Text>
-        {PALETTE_IDS.map((id, i) => {
-          const palette = PALETTES[id]
-          const note = id === current ? (isSessionOnly ? ', current for this session' : ', current') : ''
-          return (
-            <Box flexDirection="row" gap={1} alignItems="center">
-              {Svg !== undefined && <Svg source={swatch(palette)} alt={`${palette.label} colours`} width={48} height={20} />}
-              <Button
-                key={id}
-                hotkey={String(i + 1)}
-                variant={id === current ? 'primary' : 'secondary'}
-                onPress={() => update($, pending, () => id)}
-              >
-                {palette.label} <Text dimColor>{palette.mode}{note}</Text>
-              </Button>
-            </Box>
-          )
-        })}
-        <Button role="dismiss" onPress={() => $.ui.close({ id: PICKER })}>Close</Button>
+      <Box flexDirection="column">
+        <Text>
+          <Text bold>Canopy themes</Text>
+          <Text dimColor>  Click a theme. Once you click in here, the arrow keys and Enter work too.</Text>
+        </Text>
+        <Box flexDirection="row" gap={1} flexWrap="wrap">
+          {PALETTE_IDS.map((id, i) => {
+            const palette = PALETTES[id]
+            const note = id === current ? (isSessionOnly ? ' (this session)' : ' (current)') : ''
+            return (
+              <Box flexDirection="row" gap={1} alignItems="center">
+                {chip(palette)}
+                <Button
+                  key={id}
+                  hotkey={String(i + 1)}
+                  variant={id === current ? 'primary' : 'secondary'}
+                  {...(id === current && { autoFocus: true as const })}
+                  onPress={async () => {
+                    await update($, pending, () => id)
+                    await focusOn($, e.requestId, 'all')
+                  }}
+                >
+                  {palette.label}{note}
+                </Button>
+              </Box>
+            )
+          })}
+          <Button key="close" role="dismiss" onPress={() => closePicker($)}>Close</Button>
+        </Box>
       </Box>
     )
   })

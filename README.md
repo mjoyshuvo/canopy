@@ -96,19 +96,21 @@ In a Claude Code session in the desktop app:
 /plugin install canopy@canopy
 ```
 
-Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and opens the **Canopy themes** picker. It opens by itself only once; `/canopy` brings it back.
+Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and shows the **Canopy themes** picker above the message box. It shows by itself only once; `/canopy` brings it back.
 
 ## Usage
 
 ### Pick a theme
 
-1. Run `/canopy`. The **Canopy themes** picker opens, listing every theme with its colours.
-2. Click a theme, or press its number.
+1. Run `/canopy`. The **Canopy themes** picker appears above the message box, listing every theme with its colours.
+2. Click a theme. To use the keyboard, click inside the picker first; then the arrow keys and Enter, or a theme's number, pick it.
 3. Choose where it applies:
    - **This session only**: the theme applies now. Your saved theme stays as it is, and the next session uses it.
    - **All sessions**: the theme is saved and applied at the start of every session.
 
 Press **Back** to pick a different theme, or **Close** to leave without changing anything.
+
+The picker sits in the main column rather than the side panel. A mod can't move the keyboard there from the message box, which is why the keys work only after a click.
 
 ### Commands
 
@@ -191,7 +193,7 @@ plugins/canopy/
 ├── hooks/
 │   ├── palettes.ts     colors and scene colors for each theme
 │   ├── scene.ts        the SVG backdrops
-│   ├── register.tsx    the /canopy command, the theme picker pane and theme switching
+│   ├── register.tsx    the /canopy command, the theme picker above the prompt and theme switching
 │   └── make-colors.js  color generator (vendored, do not edit)
 ├── types/index.d.ts    the session values the picker keeps
 └── tests/              picker and command tests (claude plugin test plugins/canopy)
