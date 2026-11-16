@@ -94,21 +94,21 @@ In a Claude Code session in the desktop app:
 /plugin install canopy@canopy
 ```
 
-Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and opens a **Canopy themes** pane listing every theme with its colours. Click one (or press its number) to switch; the pane opens by itself only once, and `/canopy pick` brings it back.
+Then start a new session, or run `/reload-plugins` in the current one. Canopy applies **Apple green** the first time and opens a **Canopy themes** pane listing every theme with its colours. Click one (or press its number), then choose **This session only** or **All sessions**. The pane opens by itself only once; `/canopy` brings it back.
 
 ## Usage
 
 | Command | What it does |
 | --- | --- |
-| `/canopy firefly-lake` | Switch to Firefly Lake |
+| `/canopy firefly-lake` | Switch to Firefly Lake for all sessions |
 | `/canopy silver-grass` | Switch to Silver grass |
 | `/canopy apple-green` | Switch to Apple green |
 | `/canopy one-dark-pro` | Switch to One Dark Pro |
 | `/canopy dracula` | Switch to Dracula |
 | `/canopy material` | Switch to Material |
-| `/canopy pick` | Open the theme picker pane |
+| `/canopy <theme> session` | Switch for this session only, keeping your saved theme |
 | `/canopy off` | Use the app's own look for this session |
-| `/canopy` | Re-apply your saved theme |
+| `/canopy` | Open the theme picker: pick a theme, then this session only or all sessions |
 | `/canopy debug` | Print diagnostics (for bug reports) |
 
 - Your choice is saved and applied at the start of every session.
